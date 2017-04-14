@@ -3,6 +3,10 @@ var neurons = [];
 var layers = [];
 var links = [];
 var testData = [];
+var currentError = [0,0];
+var testNumber = 0;
+var testCounter = 0;
+var timer1;
 
 $(document).ready( on_page_ready );
 
@@ -15,16 +19,32 @@ function on_page_ready( )
   $( '#mainDiv' ).append( ': loaded at '+UTCtime);
   console.log('loaded');
   
-  var timer1;
   timer1 = setInterval(timeElapsed, 10);
   
   createlayers();
   createNeurons();
-  randomize();
+  createTestData();
   createlinks();
+  randomize();
   calcOutput();
   drawAll();
 
+}
+
+function onClickStep(){
+  timeElapsed();
+}
+
+function onClickRand(){
+  randomize();
+}
+
+function onClickPause(){
+  clearInterval(timer1);
+}
+
+function onClickPlay(){
+  timer1 = setInterval(timeElapsed, 10);
 }
 
 function timeElapsed()
@@ -32,8 +52,8 @@ function timeElapsed()
   timer1value++;
   $( '#elapsedDiv' ).empty( );
   $( '#elapsedDiv' ).append( timer1value + ' runs');
-  randomize();
-  calcOutput();
+  backPropogate();
+  runTest();
   drawAll();
 }
 
@@ -93,7 +113,75 @@ function randomize()
   }
   */
   for(let l of links){
-    l.weight = (Math.random()*2)-1;
+    l.weight = ( parseInt(Math.random()*400)/200)-1;
+  }
+}
+
+function runTest()
+{
+  testCounter++;
+  if(testCounter>300){
+    testCounter = 0;
+    testNumber++;
+    if(testNumber > 5){testNumber = 0;}
+  }
+  for(let i=0;i<4;i++){
+    neurons[i].value = testData[testNumber][i];
+  }
+  calcOutput();
+  currentError[0] = testData[testNumber][4]-neurons[4].value;
+  currentError[1] = testData[testNumber][5]-neurons[5].value;
+}
+
+function getError()
+{
+  var error = [0,0];
+  error[0] = testData[testNumber][4]-neurons[4].value;
+  error[1] = testData[testNumber][5]-neurons[5].value;
+  return error;
+}
+
+function backPropogate()
+{
+  for(let link of links){
+    if(true){
+      var baseError = getError();
+      var baseWeight = link.weight;
+      link.weight = baseWeight - 0.005;
+      calcOutput();
+      var reducedError = getError();
+      link.weight = baseWeight + 0.005;
+      calcOutput();
+      var increasedError = getError();
+      if(absError(reducedError)<absError(increasedError)){
+        link.weight = baseWeight - 0.005;
+      }
+      else if(absError(increasedError)< absError(baseError))
+      {
+        link.weight = baseWeight + 0.005;
+      }
+      else{
+        link.weight = baseWeight;
+      }
+      if(link.weight < -1){link.weight = -1};
+      if(link.weight > 1){link.weight = 1};
+    }
+  }
+}
+
+function absError(error)
+{
+  //return Math.abs(error[0])+Math.abs(error[1]);
+  return max(Math.abs(error[0]),Math.abs(error[1]));
+}
+
+function max(a,b)
+{
+  if (a > b){
+    return a;
+  }
+  else{
+    return b;
   }
 }
 
@@ -112,7 +200,9 @@ function calcOutput()
   }
   for(let n of neurons){
     if(n.layer==1){
-      n.value = n.value/4;
+      if(n.value>1){n.value = 1;}
+      if(n.value<-1){n.value = -1;}
+      //n.value = n.value/4;
     }
   }
 }
@@ -165,12 +255,23 @@ function drawTable()
     table += '<tr><td>'+l.from+'</td><td>'+l.to+'</td><td>'+l.weight+'</td></tr>';
   }
   table += '</table>';
+  // Error table
+  table += '<table><tr><th>Neuron</th><th>Output</th><th>Expected</th><th>Error</th></tr>';
+  table += '<tr><td>'+4+'</td><td>'+neurons[4].value+'</td><td>'+testData[testNumber][4]+'</td><td>'+currentError[0]+'</td></tr>';
+  table += '<tr><td>'+5+'</td><td>'+neurons[5].value+'</td><td>'+testData[testNumber][5]+'</td><td>'+currentError[1]+'</td></tr>';
+  table += '</table>';
+  // data table
+  table += '<table><tr><td>Absolute Error</td><td>'+absError(currentError)+'</td></tr></table>';
   $( '#dataTable' ).append( table);
   
 }
 
 function createTestData()
 {
-  testData.push([1,-1,1,-1,1,0]);
-  testData.push([-1,1,-1,1,0,1]);
+  testData.push([-1,-1,-1,1,-1,1]);
+  testData.push([-1,-1,1,1,1,-1]);
+  testData.push([-1,1,1,1,1,1]);
+  testData.push([1,-1,-1,-1,-1,1]);
+  testData.push([1,1,-1,-1,1,-1]);
+  testData.push([1,1,1,-1,1,1]);
 }
