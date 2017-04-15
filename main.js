@@ -19,7 +19,7 @@ function on_page_ready( )
   $( '#mainDiv' ).append( ': loaded at '+UTCtime);
   console.log('loaded');
   
-  timer1 = setInterval(timeElapsed, 10);
+  timer1 = setInterval(runSimulation, 10);
   
   createlayers();
   createNeurons();
@@ -31,23 +31,8 @@ function on_page_ready( )
 
 }
 
-function onClickStep(){
-  timeElapsed();
-}
 
-function onClickRand(){
-  randomize();
-}
-
-function onClickPause(){
-  clearInterval(timer1);
-}
-
-function onClickPlay(){
-  timer1 = setInterval(timeElapsed, 10);
-}
-
-function timeElapsed()
+function runSimulation()
 {
   timer1value++;
   $( '#elapsedDiv' ).empty( );
@@ -55,52 +40,6 @@ function timeElapsed()
   backPropogate();
   runTest();
   drawAll();
-}
-
-function createlayers()
-{
-  var layer = new Object();
-  layer.id = 0;
-  layer.nCount = 4;
-  layer.label = 'input';
-  layers.push(layer);
-  var layer = new Object();
-  layer.nCount = 2;
-  layer.id = 1;
-  layer.label = 'output';
-  layers.push(layer);
-}
-
-function createNeurons(){
-  let neuronID = 0;
-  for(let layer of layers){
-    for(let i=0;i<layer.nCount;i++){
-      var n = new Object();
-      n.id = neuronID;
-      neuronID++;
-      n.layer = layer.id;
-      n.x = 50+(layer.id*50);
-      n.y = 50+(i*50+(layer.id*50));
-      n.value = 1;
-      neurons.push(n);
-    }
-  }
-}
-
-function createlinks()
-{
-  for(let i=0;i<layers[0].nCount;i++){
-    var link = new Object();
-    link.from = i;
-    link.to = 4;
-    link.weight = 1;
-    links.push(link);
-    var link = new Object();
-    link.from = i;
-    link.to = 5;
-    link.weight = 1;
-    links.push(link);
-  }
 }
 
 function randomize()
@@ -147,18 +86,18 @@ function backPropogate()
     if(true){
       var baseError = getError();
       var baseWeight = link.weight;
-      link.weight = baseWeight - 0.005;
+      link.weight = baseWeight - 0.00001;
       calcOutput();
       var reducedError = getError();
-      link.weight = baseWeight + 0.005;
+      link.weight = baseWeight + 0.00001;
       calcOutput();
       var increasedError = getError();
       if(absError(reducedError)<absError(increasedError)){
-        link.weight = baseWeight - 0.005;
+        link.weight = baseWeight - 0.00001;
       }
       else if(absError(increasedError)< absError(baseError))
       {
-        link.weight = baseWeight + 0.005;
+        link.weight = baseWeight + 0.00001;
       }
       else{
         link.weight = baseWeight;
@@ -206,6 +145,8 @@ function calcOutput()
     }
   }
 }
+
+// Draw functions
 
 function drawAll()
 {
@@ -266,6 +207,8 @@ function drawTable()
   
 }
 
+// Create Functions
+
 function createTestData()
 {
   testData.push([-1,-1,-1,1,-1,1]);
@@ -274,4 +217,68 @@ function createTestData()
   testData.push([1,-1,-1,-1,-1,1]);
   testData.push([1,1,-1,-1,1,-1]);
   testData.push([1,1,1,-1,1,1]);
+}
+
+function createlayers()
+{
+  var layer = new Object();
+  layer.id = 0;
+  layer.nCount = 4;
+  layer.label = 'input';
+  layers.push(layer);
+  var layer = new Object();
+  layer.nCount = 2;
+  layer.id = 1;
+  layer.label = 'output';
+  layers.push(layer);
+}
+
+function createNeurons(){
+  let neuronID = 0;
+  for(let layer of layers){
+    for(let i=0;i<layer.nCount;i++){
+      var n = new Object();
+      n.id = neuronID;
+      neuronID++;
+      n.layer = layer.id;
+      n.x = 50+(layer.id*50);
+      n.y = 50+(i*50+(layer.id*50));
+      n.value = 1;
+      neurons.push(n);
+    }
+  }
+}
+
+function createlinks()
+{
+  for(let i=0;i<layers[0].nCount;i++){
+    var link = new Object();
+    link.from = i;
+    link.to = 4;
+    link.weight = 1;
+    links.push(link);
+    var link = new Object();
+    link.from = i;
+    link.to = 5;
+    link.weight = 1;
+    links.push(link);
+  }
+}
+
+// Click Functions
+
+function onClickStep(){
+  runSimulation();
+}
+
+function onClickRand(){
+  randomize();
+}
+
+function onClickPause(){
+  clearInterval(timer1);
+}
+
+function onClickPlay(){
+  timer1 = setInterval(runSimulation, 10);
 }
