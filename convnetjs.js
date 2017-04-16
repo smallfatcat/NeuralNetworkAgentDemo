@@ -1,38 +1,8 @@
 var trainingRuns = 0;
 var testdata = [];
 var label = [];
+var runs = 0;
 var lastError = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-testdata.push(new convnetjs.Vol([0,0,0,0]));
-label.push(0);
-testdata.push(new convnetjs.Vol([0,0,0,1]));
-label.push(1);
-testdata.push(new convnetjs.Vol([0,0,1,0]));
-label.push(2);
-testdata.push(new convnetjs.Vol([0,0,1,1]));
-label.push(3);
-testdata.push(new convnetjs.Vol([0,1,0,0]));
-label.push(1);
-testdata.push(new convnetjs.Vol([0,1,0,1]));
-label.push(2);
-testdata.push(new convnetjs.Vol([0,1,1,0]));
-label.push(3);
-testdata.push(new convnetjs.Vol([0,1,1,1]));
-label.push(4);
-testdata.push(new convnetjs.Vol([1,0,0,0]));
-label.push(2);
-testdata.push(new convnetjs.Vol([1,0,0,1]));
-label.push(3);
-testdata.push(new convnetjs.Vol([1,0,1,0]));
-label.push(4);
-testdata.push(new convnetjs.Vol([1,0,1,1]));
-label.push(5);
-testdata.push(new convnetjs.Vol([1,1,0,0]));
-label.push(3);
-testdata.push(new convnetjs.Vol([1,1,0,1]));
-label.push(4);
-testdata.push(new convnetjs.Vol([1,1,1,0]));
-label.push(5);
-testdata.push(new convnetjs.Vol([1,1,1,1]));
 label.push(6);
 var net = new convnetjs.Net();
 
@@ -70,7 +40,7 @@ function buildWorld()
     worldMap.map[450][y] = 1;
   }
   // Create food
-  for (var i=0; i < 50; i++){
+  for (var i=0; i < 100; i++){
     var x = Math.floor(Math.random()*398)+ 51;
     var y = Math.floor(Math.random()*398)+ 51;
     worldMap.map[x][y] = 2;
@@ -80,7 +50,7 @@ function buildWorld()
   }
 }
 
-var Mouth = function(x.y)
+var Mouth = function(x,y)
 {
   this.x_offset = x;
   this.y_offset = y;
@@ -138,8 +108,14 @@ var Agent = function()
   this.y = 0;
   this.rot = 0;
   this.reward = 0;
+  this.food = 0;
+  this.justEaten = 0;
+  this.travelled = 0;
+  this.moveCost =0.005;
+  this.turnCost =0.0005;
   this.sensors = [];
   this.mouths = [];
+  // Add sensors 
   for(var j = 1; j<3; j++){
     for(var sx = -5; sx< 6; sx++){
       this.sensors.push(new Sensor( sx, -5, 0, 250, j));
@@ -150,12 +126,15 @@ var Agent = function()
       this.sensors.push(new Sensor(  5, sy, 1, 250, j));
     }
   }
-  
-  this.mouths.push(new Mouth(-5, 0));
-  this.mouths.push(new Mouth( 0,-5));
-  this.mouths.push(new Mouth( 5, 0));
-  this.mouths.push(new Mouth( 0, 5));
-  
+  // Add mouths
+  for(var sx = -5; sx< 6; sx++){
+    this.mouths.push(new Mouth(sx, -5));
+    this.mouths.push(new Mouth(sx,  5));
+  }
+  for(var sy = -5; sy< 6; sy++){
+    this.mouths.push(new Mouth(  5, sy));
+    this.mouths.push(new Mouth( -5, sy));
+  }
 }
 Agent.prototype = {
   turn: function(direction)
@@ -172,6 +151,7 @@ Agent.prototype = {
         this.rot=3;
       }
     }
+    this.food -= this.turnCost;
   },
   
   advance: function(speed)
@@ -188,6 +168,8 @@ Agent.prototype = {
     if(this.rot==1){
       this.x += speed;
     }
+    this.food -= this.moveCost;
+    this.travelled++;
   },
   
   sense: function()
@@ -197,21 +179,41 @@ Agent.prototype = {
     }
   },
   
-  calcReward: function()
+  eat: function()
   {
-    var foodProximity = 0;
-    for(var s of this.sensors){
-      if(s.sensitivity == 2){
-        foodProximity = Math.max(s.output, foodProximity);
+    for(var m of this.mouths){
+      if(worldMap.map[this.x+m.x_offset][this.y+m.y_offset] == 2){
+        worldMap.map[this.x+m.x_offset][this.y+m.y_offset] = 0;
+        this.food += 1;
+        this.justEaten += 1;
       }
     }
-    this.reward = foodProximity;
+  },
+  
+  calcReward: function()
+  {
+    var foodProximityReward = 0;
+    for(var s of this.sensors){
+      if(s.sensitivity == 2){
+        foodProximityReward = Math.max(s.output, foodProximityReward);
+      }
+    }
+    
+    var foodReward = Math.max(this.food/20,0);
+    var eatenReward = this.justEaten * 5;
+    this.justEaten = 0;
+    
+    this.reward = foodProximityReward+foodReward+eatenReward;
   }
 }
 
 var MyAgent = new Agent();
 MyAgent.x = 250;
 MyAgent.y = 250;
+
+var DumbAgent = new Agent();
+DumbAgent.x = 250;
+DumbAgent.y = 250;
 
 var routeTimer;
 
@@ -247,7 +249,7 @@ function followWP(r){
 
 function randomAction()
 {
-
+  runs++;
   // Calculate sensor readings
   MyAgent.sense();
   // Calculate rewards
@@ -255,8 +257,12 @@ function randomAction()
   // get inputs
   var brainInputs = [];
   for(var s of MyAgent.sensors){
-    brainInputs.push(s.output);
+    brainInputs.push(s.rot === MyAgent.rot ? s.output : 0);
   }
+  brainInputs.push(MyAgent.rot === 0 ? 1:0);
+  brainInputs.push(MyAgent.rot === 1 ? 1:0);
+  brainInputs.push(MyAgent.rot === 2 ? 1:0);
+  brainInputs.push(MyAgent.rot === 3 ? 1:0);
   
   // Get action from brain
   var action = agentbrain.forward(brainInputs);
@@ -264,10 +270,24 @@ function randomAction()
   // Train brain with reward
   agentbrain.backward(MyAgent.reward);
   
+  // Do DumbAgent action
+  var actionDumb = Math.floor( Math.random()*3);
+  if(actionDumb==0){
+    DumbAgent.advance(1);
+    DumbAgent.eat();
+  }
+  if(actionDumb==1){
+    DumbAgent.turn(0);
+  }
+  if(actionDumb==2){
+    DumbAgent.turn(1);
+  }
+  
   // Do brain action
   //var action = Math.floor( Math.random()*3);
   if(action==0){
     MyAgent.advance(1);
+    MyAgent.eat();
   }
   if(action==1){
     MyAgent.turn(0);
@@ -278,12 +298,19 @@ function randomAction()
   // Update Agent readout
   $('#agentDiv').empty();
   var agentTxt = '';
+  /*
   var i = 0;
   for(var s of MyAgent.sensors){
     agentTxt += 'Sensor'+i+':' + s.output + ' : ';
     i++;
   }
+  */
   agentTxt += 'Reward:' + MyAgent.reward + '<br>';
+  agentTxt += 'Food AI:' + MyAgent.food + '<br>';
+  agentTxt += 'Food DumbAgent:' + DumbAgent.food + '<br>';
+  agentTxt += 'Travelled AI:' + MyAgent.travelled + '<br>';
+  agentTxt += 'Travelled DumbAgent:' + DumbAgent.travelled + '<br>';
+  agentTxt += 'Runs:' + runs + '<br>';
   $('#agentDiv').append(agentTxt);
   
   drawWorld();
@@ -330,7 +357,7 @@ function start() {
 
 function brainMaker()
 {
-var num_inputs = 89; // 44 eyes, each sees 2 numbers (wall, green proximity)
+var num_inputs = 92; // 44 eyes, each sees 2 numbers (wall, green proximity), 4 rotation
 var num_actions = 3; // 3 possible actions agent can do
 var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
 var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
@@ -378,15 +405,17 @@ function drawCanvas()
   for(let l of agentbrain.value_net.layers){
     x =  20;
     y += 15;
-    for(let w of l.out_act.w){
-      //console.log(w);
-      x += 15;
-      if (x>400){x = 35;y+=15;};
-      ctx.beginPath();
-      ctx.arc(x,y,5,0,2*Math.PI);
-      var c = parseInt((w+1)/2*255);
-      ctx.fillStyle='rgb('+c+','+c+','+c+')';
-      ctx.fill();
+    if(l.out_act !=undefined){
+      for(let w of l.out_act.w){
+        //console.log(w);
+        x += 15;
+        if (x>600){x = 35;y+=15;};
+        ctx.beginPath();
+        ctx.arc(x,y,5,0,2*Math.PI);
+        var c = parseInt((w+1)/2*255);
+        ctx.fillStyle='rgb('+c+','+c+','+c+')';
+        ctx.fill();
+      }
     }
   }
 }
@@ -395,12 +424,13 @@ function drawWorld()
 {
   var canvas = document.getElementById("worldCanvas");
   var ctx = canvas.getContext("2d");
-  
+  // Clear
   ctx.fillStyle = 'rgb(255,255,255)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
+  // Draw DumbAgent
   ctx.beginPath();
-  ctx.fillStyle = 'rgb(64,64,64)';
+  ctx.fillStyle = 'rgb(255,64,64)';
   ctx.fillRect(MyAgent.x-5, MyAgent.y-5, 10, 10);
   
   var p = 10;
@@ -426,8 +456,37 @@ function drawWorld()
   ctx.strokeStyle='rgb(0,0,0)';
   ctx.lineWidth=2;
   ctx.stroke();
+    
+  // Draw DumbAgent
+  ctx.beginPath();
+  ctx.fillStyle = 'rgb(64,255,64)';
+  ctx.fillRect(DumbAgent.x-5, DumbAgent.y-5, 10, 10);
   
+  var p = 10;
+  var cx = DumbAgent.x;
+  var cy = DumbAgent.y;
+  ctx.beginPath();
+  if(DumbAgent.rot == 3){
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx-p, cy);
+  }
+  if(DumbAgent.rot == 1){
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx+p, cy);
+  }
+  if(DumbAgent.rot == 0){
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx, cy-p);
+  }
+  if(DumbAgent.rot == 2){
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx, cy+p);
+  }
+  ctx.strokeStyle='rgb(0,0,0)';
+  ctx.lineWidth=2;
+  ctx.stroke();
   
+  // Draw Environment
   for(var wx=0; wx <500; wx++){
     for(var wy=0; wy <500; wy++){
       // Draw Walls
