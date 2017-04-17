@@ -86,7 +86,8 @@ var Agent = function()
   for(var j = 2; j<3; j++){
     for(var sx = -5; sx< 6; sx++){
       // top
-      this.sensors.push(new Sensor( sx, -5, R_UP, 300, j));
+      this.sensors.push(new Sensor( sx, -5, R_UP, 300, 2)); // Food
+      this.sensors.push(new Sensor( sx, -5, R_UP, 300, 1)); // Wall
       // bottom
       //this.sensors.push(new Sensor( sx,  5, R_DOWN, 300, j));
     }
@@ -231,8 +232,14 @@ Agent.prototype = {
   {
     var foodProximityReward = 0;
     for(var s of this.sensors){
-      if(s.sensitivity == 2 && s.rot == this.rot){
+      if(s.sensitivity == 2){
         foodProximityReward += s.output;
+      }
+    }
+    var wallProximityReward = 0;
+    for(var s of this.sensors){
+      if(s.sensitivity == 1){
+        wallProximityReward += s.output;
       }
     }
     
@@ -244,6 +251,7 @@ Agent.prototype = {
     
     // Tweak rewards
     foodProximityReward = foodProximityReward/10;
+    wallProximityReward = wallProximityReward/10;
     foodReward = Math.min(foodReward/100,0.8);
     eatenReward = eatenReward;
     movementReward = movementReward/10;
@@ -251,10 +259,11 @@ Agent.prototype = {
     // Store reward contributors
     this.rewardArray = [];
     this.rewardArray.push(['foodProximityReward',foodProximityReward]);
+    this.rewardArray.push(['wallProximityReward',wallProximityReward]);
     this.rewardArray.push(['foodReward',foodReward]);
     this.rewardArray.push(['eatenReward',eatenReward]);
     this.rewardArray.push(['movementReward',movementReward]);
     
-    this.reward = foodProximityReward + foodReward + eatenReward + movementReward;
+    this.reward = foodProximityReward + foodReward + eatenReward + movementReward - wallProximityReward;
   }
 }

@@ -25,13 +25,16 @@ var MyAgent = new Agent();
 MyAgent.x = 250;
 MyAgent.y = 250;
 
+var DumbAgents = [];
 var DumbAgent = new Agent();
 DumbAgent.x = 250;
 DumbAgent.y = 250;
+DumbAgents.push(DumbAgent);
 
 var DumbAgent2 = new Agent();
 DumbAgent2.x = 250;
 DumbAgent2.y = 250;
+DumbAgents.push(DumbAgent2);
 
 var routeTimer;
 
@@ -66,8 +69,7 @@ function start() {
  
   // example of running something every 1 second
   agentbrain = brainMaker();
-  drawWorld();
-  setInterval(drawAll, 100);
+  drawAll();
   setInterval(checkSimRunning, 10);
   //setInterval(checkFood,10000);
 }
@@ -202,13 +204,11 @@ function clockTick()
   // Train brain with reward
   agentbrain.backward(MyAgent.reward);
   
-  // Do DumbAgent action
-  var actionDumb = Math.floor( Math.random()*7);
-  DumbAgent.doAction(actionDumb);
-  
-    // Do DumbAgent2 action
-  var actionDumb = Math.floor( Math.random()*7);
-  DumbAgent2.doAction(actionDumb);
+  for(var dAgent of DumbAgents){
+    // Do DumbAgent action
+    var actionDumb = Math.floor( Math.random()*7);
+    dAgent.doAction(actionDumb);
+  }
   
   // Update Agent readout
   $('#agentDiv').empty();
@@ -225,18 +225,18 @@ function clockTick()
   }
   agentTxt += 'Reward:' + MyAgent.reward.toFixed(3) + '<br>';
   agentTxt += 'Food AI:' + MyAgent.food.toFixed(3) + '<br>';
-  agentTxt += 'Food DumbAgent1:' + DumbAgent.food.toFixed(3) + '<br>';
-  agentTxt += 'Food DumbAgent2:' + DumbAgent2.food.toFixed(3) + '<br>';
+  agentTxt += 'Food DumbAgent1:' + DumbAgents[0].food.toFixed(3) + '<br>';
+  agentTxt += 'Food DumbAgent2:' + DumbAgents[1].food.toFixed(3) + '<br>';
   agentTxt += 'Travelled AI:' + MyAgent.travelled + '<br>';
-  agentTxt += 'Travelled DumbAgent:' + DumbAgent.travelled + '<br>';
-  agentTxt += 'Travelled DumbAgent2:' + DumbAgent2.travelled + '<br>';
+  agentTxt += 'Travelled DumbAgent:' + DumbAgents[0].travelled + '<br>';
+  agentTxt += 'Travelled DumbAgent2:' + DumbAgents[1].travelled + '<br>';
   agentTxt += 'Runs:' + runs + '<br>';
   agentTxt += 'Food:' + worldMap.foodTotal + '<br>';
   agentTxt += 'Sim running:' + simRunning + '<br>'
   agentTxt += 'Learning:' + agentbrain.learning + '<br>';
   $('#agentDiv').append(agentTxt);
   
-  drawWorld();
+  drawAll();
   
   var eltvar = document.getElementById("eltDiv");
   agentbrain.visSelf(eltvar);
@@ -244,7 +244,7 @@ function clockTick()
 
 function brainMaker()
 {
-var num_inputs = 15; // 11 eyes, each sees 1 number (wall, green proximity), 4 rotation
+var num_inputs = 26; // 22 eyes, each sees 1 color (wall, food proximity), 4 rotation
 var num_actions = 7; // 3 possible actions agent can do
 var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
 var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;

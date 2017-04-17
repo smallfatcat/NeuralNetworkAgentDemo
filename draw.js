@@ -1,6 +1,6 @@
 function drawAll() {
   drawCanvas();
-  //drawWorld();
+  drawWorld();
 }
 
 function drawCanvas()
@@ -13,10 +13,10 @@ function drawCanvas()
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
   //net.layers[1].out_act.w[0]
-  var x = 50;
+  var x = 40;
   var y = 20;
   for(let l of agentbrain.value_net.layers){
-    x =  50;
+    x =  40;
     y += 10;
     if(l.out_act !=undefined){
       var k = 0;
@@ -71,63 +71,37 @@ function drawWorld()
   ctx.lineWidth=2;
   ctx.stroke();
   
-  // Draw DumbAgent
-  ctx.beginPath();
-  ctx.fillStyle = 'rgb(64,255,64)';
-  ctx.fillRect(DumbAgent.x-5, DumbAgent.y-5, 10, 10);
-  
-  var p = 10;
-  var cx = DumbAgent.x;
-  var cy = DumbAgent.y;
-  ctx.beginPath();
-  if(DumbAgent.rot == 3){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx-p, cy);
-  }
-  if(DumbAgent.rot == 1){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx+p, cy);
-  }
-  if(DumbAgent.rot == 0){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx, cy-p);
-  }
-  if(DumbAgent.rot == 2){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx, cy+p);
-  }
-  ctx.strokeStyle='rgb(0,0,0)';
-  ctx.lineWidth=2;
-  ctx.stroke();  
-  // Draw DumbAgent2
-  ctx.beginPath();
-  ctx.fillStyle = 'rgb(64,255,64)';
-  ctx.fillRect(DumbAgent2.x-5, DumbAgent2.y-5, 10, 10);
-  
-  var p = 10;
-  var cx = DumbAgent2.x;
-  var cy = DumbAgent2.y;
-  ctx.beginPath();
-  if(DumbAgent2.rot == 3){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx-p, cy);
-  }
-  if(DumbAgent2.rot == 1){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx+p, cy);
-  }
-  if(DumbAgent2.rot == 0){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx, cy-p);
-  }
-  if(DumbAgent2.rot == 2){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx, cy+p);
-  }
-  ctx.strokeStyle='rgb(0,0,0)';
-  ctx.lineWidth=2;
-  ctx.stroke();
-  
+  for(var dAgent of DumbAgents){
+    // Draw DumbAgent
+    ctx.beginPath();
+    ctx.fillStyle = 'rgb(64,255,64)';
+    ctx.fillRect(dAgent.x-5, dAgent.y-5, 10, 10);
+    
+    var p = 10;
+    var cx = dAgent.x;
+    var cy = dAgent.y;
+    ctx.beginPath();
+    if(dAgent.rot == 3){
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx-p, cy);
+    }
+    if(dAgent.rot == 1){
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx+p, cy);
+    }
+    if(dAgent.rot == 0){
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx, cy-p);
+    }
+    if(dAgent.rot == 2){
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx, cy+p);
+    }
+    ctx.strokeStyle='rgb(0,0,0)';
+    ctx.lineWidth=2;
+    ctx.stroke();
+  }  
+    
   // Draw Environment
   for(var wx=0; wx <500; wx++){
     for(var wy=0; wy <500; wy++){
