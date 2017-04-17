@@ -31,8 +31,16 @@ body {
 <div id="eltDiv"></div>
 <div id="mcnv">
 <canvas id="worldCanvas" width="500" height="500"></canvas>
-<canvas id="mainCanvas" width="700" height="500"></canvas>
+<canvas id="mainCanvas" width="600" height="500"></canvas>
 </div>
 <div id="errordiv"></div>
+<div id="brainDiv">
+<button id="saveBut" class="ui-button ui-widget ui-corner-all" onclick="savenet( )">Save</button>
+<button id="loadBut" class="ui-button ui-widget ui-corner-all" onclick="loadnet( )">Load</button>
+<button id="startBut" class="ui-button ui-widget ui-corner-all" onclick="startlearn( )">Start</button>
+<button id="stopBut" class="ui-button ui-widget ui-corner-all" onclick="stoplearn( )">Stop</button>
+<textarea id="brainText" style="width:100%; height:200px;">
+</textarea>
+</div>
 </body>
 </html>

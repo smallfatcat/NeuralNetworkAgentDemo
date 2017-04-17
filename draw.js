@@ -1,6 +1,6 @@
 function drawAll() {
   drawCanvas();
-  drawWorld();
+  //drawWorld();
 }
 
 function drawCanvas()
@@ -8,20 +8,23 @@ function drawCanvas()
   var canvas = document.getElementById("mainCanvas");
   var ctx = canvas.getContext("2d");
   
-  ctx.fillStyle = 'rgb(128,128,255)';
+  // Clear
+  ctx.fillStyle='rgb(64,64,255)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
   //net.layers[1].out_act.w[0]
-  var x = 20;
+  var x = 50;
   var y = 20;
   for(let l of agentbrain.value_net.layers){
-    x =  20;
-    y += 15;
+    x =  50;
+    y += 10;
     if(l.out_act !=undefined){
+      var k = 0;
       for(let w of l.out_act.w){
         //console.log(w);
-        x += 15;
-        if (x>600){x = 35;y+=15;};
+        k++;
+        x += 10;
+        if (k>50){x = 50;y+=10; k = 1};
         ctx.beginPath();
         ctx.arc(x,y,5,0,2*Math.PI);
         var c = parseInt((w+1)/2*255);
@@ -37,8 +40,7 @@ function drawWorld()
   var canvas = document.getElementById("worldCanvas");
   var ctx = canvas.getContext("2d");
   // Clear
-  ctx.fillStyle = 'rgb(255,255,255)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
   
   // Draw MyAgent
   ctx.beginPath();

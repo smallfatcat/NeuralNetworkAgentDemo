@@ -1,3 +1,10 @@
+const R_UP    = 0;
+const R_RIGHT = 1;
+const R_DOWN  = 2;
+const R_LEFT  = 3;
+const T_CW    = 0;
+const T_CCW   = 1;
+
 var trainingRuns = 0;
 var testdata = [];
 var label = [];
@@ -60,7 +67,7 @@ function start() {
   agentbrain = brainMaker();
   setInterval(drawAll, 100);
   setInterval(clockTick, 10);
-  setInterval(checkFood,10000);
+  //setInterval(checkFood,10000);
 }
 
 function buildWorld()
@@ -86,13 +93,7 @@ function buildWorld()
 }
 function checkFood()
 {
-  var foodTotal = 0;
-  for(var x=0; x < 500; x++){
-    for(var y=0; y < 500; y++){
-      foodTotal += worldMap.map[x][y] === 2 ? 1 : 0;
-    }
-  }
-  worldMap.foodTotal = foodTotal;
+  var foodTotal = worldMap.foodTotal;
   if(foodTotal < 1000){
     // Create food
     for (var i=0; i < 500; i++){
@@ -139,6 +140,7 @@ function followWP(r){
 function clockTick()
 {
   runs++;
+  checkFood();
   // Calculate sensor readings
   MyAgent.sense();
   // Calculate rewards
@@ -185,15 +187,20 @@ function clockTick()
     i++;
   }
   */
-  agentTxt += 'Reward:' + MyAgent.reward + '<br>';
-  agentTxt += 'Food AI:' + MyAgent.food + '<br>';
-  agentTxt += 'Food DumbAgent1:' + DumbAgent.food + '<br>';
-  agentTxt += 'Food DumbAgent2:' + DumbAgent2.food + '<br>';
+  for(var rc of MyAgent.rewardArray){
+    agentTxt += rc[0]+':' + rc[1].toFixed(3) + '<br>';
+  }
+  agentTxt += 'Reward:' + MyAgent.reward.toFixed(3) + '<br>';
+  agentTxt += 'Food AI:' + MyAgent.food.toFixed(3) + '<br>';
+  agentTxt += 'Food DumbAgent1:' + DumbAgent.food.toFixed(3) + '<br>';
+  agentTxt += 'Food DumbAgent2:' + DumbAgent2.food.toFixed(3) + '<br>';
   agentTxt += 'Travelled AI:' + MyAgent.travelled + '<br>';
   agentTxt += 'Travelled DumbAgent:' + DumbAgent.travelled + '<br>';
   agentTxt += 'Travelled DumbAgent2:' + DumbAgent2.travelled + '<br>';
   agentTxt += 'Runs:' + runs + '<br>';
   agentTxt += 'Food:' + worldMap.foodTotal + '<br>';
+  
+  agentTxt += 'Learning:' + agentbrain.learning + '<br>';
   $('#agentDiv').append(agentTxt);
   
   drawWorld();
@@ -204,9 +211,9 @@ function clockTick()
 
 function brainMaker()
 {
-var num_inputs = 48; // 11 eyes, each sees 1 number (wall, green proximity), 4 rotation
+var num_inputs = 15; // 11 eyes, each sees 1 number (wall, green proximity), 4 rotation
 var num_actions = 7; // 3 possible actions agent can do
-var temporal_window = 2; // amount of temporal memory. 0 = agent lives in-the-moment :)
+var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
 var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
 
 // the value function network computes a value of taking any of the possible actions
@@ -215,10 +222,8 @@ var network_size = num_inputs*temporal_window + num_actions*temporal_window + nu
 // to just insert simple relu hidden layers.
 var layer_defs = [];
 layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
-layer_defs.push({type:'fc', num_neurons: 96, activation:'relu'});
-layer_defs.push({type:'fc', num_neurons: 96, activation:'relu'});
-layer_defs.push({type:'fc', num_neurons: 96, activation:'relu'});
-layer_defs.push({type:'fc', num_neurons: 48, activation:'relu'});
+layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
 layer_defs.push({type:'regression', num_neurons:num_actions});
 
 // options for the Temporal Difference learner that trains the above net
@@ -238,5 +243,25 @@ opt.layer_defs = layer_defs;
 opt.tdtrainer_options = tdtrainer_options;
 
 return brain = new deepqlearn.Brain(num_inputs, num_actions, opt); // woohoo
+}
+
+function savenet() {
+  var j = agentbrain.value_net.toJSON();
+  var t = JSON.stringify(j);
+  document.getElementById('brainText').value = t;
+}
+
+function loadnet() {
+  var t = document.getElementById('brainText').value;
+  var j = JSON.parse(t);
+  agentbrain.value_net.fromJSON(j);
+  stoplearn(); // also stop learning
+}
+
+function startlearn() {
+  agentbrain.learning = true;
+}
+function stoplearn() {
+  agentbrain.learning = false;
 }
 
