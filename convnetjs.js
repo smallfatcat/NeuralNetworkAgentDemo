@@ -40,7 +40,7 @@ function buildWorld()
     worldMap.map[450][y] = 1;
   }
   // Create food
-  for (var i=0; i < 100; i++){
+  for (var i=0; i < 500; i++){
     var x = Math.floor(Math.random()*398)+ 51;
     var y = Math.floor(Math.random()*398)+ 51;
     worldMap.map[x][y] = 2;
@@ -107,23 +107,24 @@ var Agent = function()
   this.x = 0;
   this.y = 0;
   this.rot = 0;
+  this.lastAction = 0;
   this.reward = 0;
   this.food = 0;
   this.justEaten = 0;
   this.travelled = 0;
   this.moveCost =0.005;
-  this.turnCost =0.0005;
+  this.turnCost =0.0;
   this.sensors = [];
   this.mouths = [];
   // Add sensors 
-  for(var j = 1; j<3; j++){
+  for(var j = 2; j<3; j++){
     for(var sx = -5; sx< 6; sx++){
-      this.sensors.push(new Sensor( sx, -5, 0, 250, j));
-      this.sensors.push(new Sensor( sx,  5, 2, 250, j));
+      this.sensors.push(new Sensor( sx, -5, 0, 150, j));
+      this.sensors.push(new Sensor( sx,  5, 2, 150, j));
     }
     for(var sy = -5; sy< 6; sy++){
-      this.sensors.push(new Sensor( -5, sy, 4, 250, j));
-      this.sensors.push(new Sensor(  5, sy, 1, 250, j));
+      this.sensors.push(new Sensor( -5, sy, 4, 150, j));
+      this.sensors.push(new Sensor(  5, sy, 1, 150, j));
     }
   }
   // Add mouths
@@ -152,6 +153,7 @@ Agent.prototype = {
       }
     }
     this.food -= this.turnCost;
+    this.lastAction = 1;
   },
   
   advance: function(speed)
@@ -170,6 +172,12 @@ Agent.prototype = {
     }
     this.food -= this.moveCost;
     this.travelled++;
+    this.lastAction = 0;
+    
+    if(this.x<50)   this.x = 50;
+    if(this.x>450) this.x = 450;
+    if(this.y<50)   this.y = 50;
+    if(this.y>450) this.y = 450;
   },
   
   sense: function()
@@ -194,7 +202,7 @@ Agent.prototype = {
   {
     var foodProximityReward = 0;
     for(var s of this.sensors){
-      if(s.sensitivity == 2){
+      if(s.sensitivity == 2 && s.rot == this.rot){
         foodProximityReward = Math.max(s.output, foodProximityReward);
       }
     }
@@ -203,7 +211,9 @@ Agent.prototype = {
     var eatenReward = this.justEaten * 5;
     this.justEaten = 0;
     
-    this.reward = foodProximityReward+foodReward+eatenReward;
+    var movementReward = this.lastAction === 0 ? 1: 0; 
+    
+    this.reward = foodProximityReward/2 + foodReward/10 + eatenReward + movementReward/10;
   }
 }
 
@@ -257,7 +267,12 @@ function randomAction()
   // get inputs
   var brainInputs = [];
   for(var s of MyAgent.sensors){
-    brainInputs.push(s.rot === MyAgent.rot ? s.output : 0);
+    if(s.rot == MyAgent.rot){
+      brainInputs.push(s.output);
+    }
+    else{
+      brainInputs.push(s.output/4);
+    }
   }
   brainInputs.push(MyAgent.rot === 0 ? 1:0);
   brainInputs.push(MyAgent.rot === 1 ? 1:0);
@@ -271,7 +286,7 @@ function randomAction()
   agentbrain.backward(MyAgent.reward);
   
   // Do DumbAgent action
-  var actionDumb = Math.floor( Math.random()*3);
+  var actionDumb = Math.floor( Math.random()*5);
   if(actionDumb==0){
     DumbAgent.advance(1);
     DumbAgent.eat();
@@ -280,6 +295,16 @@ function randomAction()
     DumbAgent.turn(0);
   }
   if(actionDumb==2){
+    DumbAgent.turn(1);
+  }
+  if(actionDumb==3){
+    DumbAgent.advance(1);
+    DumbAgent.eat();
+    DumbAgent.turn(0);
+  }
+  if(actionDumb==4){
+    DumbAgent.advance(1);
+    DumbAgent.eat();
     DumbAgent.turn(1);
   }
   
@@ -293,6 +318,16 @@ function randomAction()
     MyAgent.turn(0);
   }
   if(action==2){
+    MyAgent.turn(1);
+  }
+  if(action==3){
+        MyAgent.advance(1);
+    MyAgent.eat();
+    MyAgent.turn(0);
+  }
+  if(action==4){
+    MyAgent.advance(1);
+    MyAgent.eat();
     MyAgent.turn(1);
   }
   // Update Agent readout
@@ -357,8 +392,8 @@ function start() {
 
 function brainMaker()
 {
-var num_inputs = 92; // 44 eyes, each sees 2 numbers (wall, green proximity), 4 rotation
-var num_actions = 3; // 3 possible actions agent can do
+var num_inputs = 48; // 11 eyes, each sees 1 number (wall, green proximity), 4 rotation
+var num_actions = 5; // 3 possible actions agent can do
 var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
 var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
 
@@ -368,8 +403,11 @@ var network_size = num_inputs*temporal_window + num_actions*temporal_window + nu
 // to just insert simple relu hidden layers.
 var layer_defs = [];
 layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
-layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
-layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+layer_defs.push({type:'fc', num_neurons: 48, activation:'sigmoid'});
+layer_defs.push({type:'fc', num_neurons: 48, activation:'relu'});
+layer_defs.push({type:'fc', num_neurons: 48, activation:'relu'});
+layer_defs.push({type:'fc', num_neurons: 24, activation:'relu'});
+layer_defs.push({type:'fc', num_neurons: 12, activation:'relu'});
 layer_defs.push({type:'regression', num_neurons:num_actions});
 
 // options for the Temporal Difference learner that trains the above net
@@ -428,7 +466,7 @@ function drawWorld()
   ctx.fillStyle = 'rgb(255,255,255)';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // Draw DumbAgent
+  // Draw MyAgent
   ctx.beginPath();
   ctx.fillStyle = 'rgb(255,64,64)';
   ctx.fillRect(MyAgent.x-5, MyAgent.y-5, 10, 10);
