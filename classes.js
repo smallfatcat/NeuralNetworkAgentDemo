@@ -3,7 +3,7 @@ var World = function()
   this.width = 500;
   this.height = 500;
   this.map = [];
-  this.foodTotal = 2000;
+  this.foodTotal = 0;
   
   for (var h = 0; h < this.height ; h++){
     var y_row = [];
@@ -78,7 +78,7 @@ var Agent = function()
   this.justEaten = 0;
   this.travelled = 0;
   this.moveCost =0.005;
-  this.turnCost =0.0;
+  this.turnCost =0.0005;
   this.sensors = [];
   this.mouths = [];
   this.rewardArray = [];

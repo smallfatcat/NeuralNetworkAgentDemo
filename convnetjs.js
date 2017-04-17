@@ -12,6 +12,7 @@ var runs = 0;
 var lastError = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 label.push(6);
 var net = new convnetjs.Net();
+var simRunning = false;
 
 var rotLabels  = ['up','right','down','left'];
 var turnLabels = ['cw', 'ccw'];
@@ -65,8 +66,9 @@ function start() {
  
   // example of running something every 1 second
   agentbrain = brainMaker();
+  drawWorld();
   setInterval(drawAll, 100);
-  setInterval(clockTick, 10);
+  setInterval(checkSimRunning, 10);
   //setInterval(checkFood,10000);
 }
 
@@ -85,10 +87,22 @@ function buildWorld()
   for (var i=0; i < 500; i++){
     var x = Math.floor(Math.random()*398)+ 51;
     var y = Math.floor(Math.random()*398)+ 51;
-    worldMap.map[x][y] = 2;
-    worldMap.map[x+1][y] = 2;
-    worldMap.map[x][y+1] = 2;
-    worldMap.map[x+1][y+1] = 2;
+    if(worldMap.map[x][y] != 2){
+      worldMap.map[x][y] = 2;
+      worldMap.foodTotal++;
+    }
+    if(worldMap.map[x+1][y]  != 2){
+      worldMap.map[x+1][y]  = 2;
+      worldMap.foodTotal++;
+    }
+    if(worldMap.map[x][y+1] != 2){
+      worldMap.map[x][y+1] = 2;
+      worldMap.foodTotal++;
+    }
+    if(worldMap.map[x+1][y+1] != 2){
+      worldMap.map[x+1][y+1] = 2;
+      worldMap.foodTotal++;
+    }
   }
 }
 function checkFood()
@@ -99,10 +113,22 @@ function checkFood()
     for (var i=0; i < 500; i++){
       var x = Math.floor(Math.random()*398)+ 51;
       var y = Math.floor(Math.random()*398)+ 51;
-      worldMap.map[x][y] = 2;
-      worldMap.map[x+1][y] = 2;
-      worldMap.map[x][y+1] = 2;
-      worldMap.map[x+1][y+1] = 2;
+      if(worldMap.map[x][y] != 2){
+        worldMap.map[x][y] = 2;
+        worldMap.foodTotal++;
+      }
+      if(worldMap.map[x+1][y]  != 2){
+        worldMap.map[x+1][y]  = 2;
+        worldMap.foodTotal++;
+      }
+      if(worldMap.map[x][y+1] != 2){
+        worldMap.map[x][y+1] = 2;
+        worldMap.foodTotal++;
+      }
+      if(worldMap.map[x+1][y+1] != 2){
+        worldMap.map[x+1][y+1] = 2;
+        worldMap.foodTotal++;
+      }
     }
   }
 }
@@ -135,6 +161,13 @@ function followWP(r){
   console.log('6:'+MyAgent.sensors[6].output);
   console.log('7:'+MyAgent.sensors[7].output);
   drawWorld();
+}
+
+function checkSimRunning()
+{
+  if(simRunning){
+    clockTick();
+  }
 }
 
 function clockTick()
@@ -199,7 +232,7 @@ function clockTick()
   agentTxt += 'Travelled DumbAgent2:' + DumbAgent2.travelled + '<br>';
   agentTxt += 'Runs:' + runs + '<br>';
   agentTxt += 'Food:' + worldMap.foodTotal + '<br>';
-  
+  agentTxt += 'Sim running:' + simRunning + '<br>'
   agentTxt += 'Learning:' + agentbrain.learning + '<br>';
   $('#agentDiv').append(agentTxt);
   
@@ -263,5 +296,11 @@ function startlearn() {
 }
 function stoplearn() {
   agentbrain.learning = false;
+}
+function runsim() {
+  simRunning = true;
+}
+function pausesim() {
+  simRunning = false;
 }
 
