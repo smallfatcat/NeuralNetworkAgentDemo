@@ -82,12 +82,13 @@ var Agent = function()
   this.sensors = [];
   this.mouths = [];
   this.rewardArray = [];
+  this.brain = brainMaker();
   // Add sensors 
   for(var j = 2; j<3; j++){
     for(var sx = -5; sx< 6; sx++){
       // top
-      this.sensors.push(new Sensor( sx, -5, R_UP, 300, 2)); // Food
-      this.sensors.push(new Sensor( sx, -5, R_UP, 300, 1)); // Wall
+      this.sensors.push(new Sensor( sx, 0, R_UP, 300, 2)); // Food
+      this.sensors.push(new Sensor( sx, 0, R_UP, 300, 1)); // Wall
       // bottom
       //this.sensors.push(new Sensor( sx,  5, R_DOWN, 300, j));
     }
@@ -162,25 +163,26 @@ Agent.prototype = {
       }
     }
     // Move eyes to facing direction
-    for(var s of this.sensors){
-      s.rot = this.rot;
-      if(s.rot == R_UP){
-        s.x_offset = 0;
-        s.y_offset = -5;
+    
+    for(var i=0;i< this.sensors.length;i++){
+      //console.log(runs);
+      var tmpx = 0;
+      var tmpy = 0;
+      tmpx = this.sensors[i].x_offset;
+      tmpy = this.sensors[i].y_offset;
+      if((direction == T_CW && this.sensors[i].rot == R_UP) || (direction == T_CW && this.sensors[i].rot == R_DOWN) || (direction == T_CCW && this.sensors[i].rot == R_LEFT) || (direction == T_CCW && this.sensors[i].rot == R_RIGHT)){
+        // Swap offsets for rotation
+        this.sensors[i].x_offset = tmpy;
+        this.sensors[i].y_offset = tmpx;
       }
-      if(s.rot == R_DOWN){
-        s.x_offset = 0;
-        s.y_offset = 5;
+      else{
+        // Swap offsets for rotation and invert
+        this.sensors[i].x_offset = tmpy * -1;
+        this.sensors[i].y_offset = tmpx * -1;
       }
-      if(s.rot == R_LEFT){
-        s.x_offset = -5;
-        s.y_offset = 0;
-      }
-      if(s.rot == R_UP){
-        s.x_offset = 5;
-        s.y_offset = 0;
-      }
+      this.sensors[i].rot = this.rot;
     }
+    
     this.food -= this.turnCost;
     this.lastAction = 1;
   },
@@ -188,16 +190,24 @@ Agent.prototype = {
   advance: function(speed)
   {
     if(this.rot==R_UP){
-      this.y -= speed;
+      if(worldMap.map[this.x][this.y - speed] != 1){
+        this.y -= speed;
+      }
     }
     if(this.rot==R_DOWN){
-      this.y += speed;
+      if(worldMap.map[this.x][this.y + speed] != 1){
+        this.y += speed;
+      }
     }
     if(this.rot==R_LEFT){
-      this.x -= speed;
+      if(worldMap.map[this.x - speed][this.y] != 1){
+        this.x -= speed;
+      }
     }
     if(this.rot==R_RIGHT){
-      this.x += speed;
+      if(worldMap.map[this.x + speed][this.y] != 1){
+        this.x += speed;
+      }
     }
     this.food -= this.moveCost;
     this.travelled++;
@@ -214,6 +224,16 @@ Agent.prototype = {
     for(var s of this.sensors){
       s.setOutput(this.x, this.y);
     }
+    
+    for(var i =0;i<this.sensors.length-1; i+=2){
+      if(this.sensors[i].output>this.sensors[i+1].output){
+        this.sensors[i+1].output = 0;
+      }
+      if(this.sensors[i].output<this.sensors[i+1].output){
+        this.sensors[i].output = 0;
+      }
+    }
+    
   },
   
   eat: function()
@@ -252,7 +272,7 @@ Agent.prototype = {
     // Tweak rewards
     foodProximityReward = foodProximityReward/10;
     wallProximityReward = wallProximityReward/10;
-    foodReward = Math.min(foodReward/100,0.8);
+    foodReward = Math.min(foodReward/100,0);
     eatenReward = eatenReward;
     movementReward = movementReward/10;
     

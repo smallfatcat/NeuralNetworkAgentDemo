@@ -1,3 +1,4 @@
+'use strict';
 const R_UP    = 0;
 const R_RIGHT = 1;
 const R_DOWN  = 2;
@@ -5,13 +6,14 @@ const R_LEFT  = 3;
 const T_CW    = 0;
 const T_CCW   = 1;
 
+var tickCompleted = true;
 var trainingRuns = 0;
 var testdata = [];
 var label = [];
 var runs = 0;
 var lastError = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 label.push(6);
-var net = new convnetjs.Net();
+//var net = new convnetjs.Net();
 var simRunning = false;
 
 var rotLabels  = ['up','right','down','left'];
@@ -40,8 +42,9 @@ var routeTimer;
 
 $(document).ready( start );
 
-var net; // declared outside -> global variable in window scope
-var agentbrain;
+//var net; // declared outside -> global variable in window scope
+//var MyAgent.brain;
+var loopTimer;
 
 function start() {
   /*
@@ -68,9 +71,9 @@ function start() {
   */
  
   // example of running something every 1 second
-  agentbrain = brainMaker();
+  //MyAgent.brain = brainMaker();
   drawAll();
-  setInterval(checkSimRunning, 10);
+  loopTimer = setInterval(checkSimRunning, 10);
   //setInterval(checkFood,10000);
 }
 
@@ -85,23 +88,31 @@ function buildWorld()
     worldMap.map[50][y]  = 1;
     worldMap.map[450][y] = 1;
   }
+  // Inside walls
+  for (var i = 150; i < 351; i++){
+    worldMap.map[150][i]  = 1;
+    worldMap.map[i][150]  = 1;
+    worldMap.map[i][350]  = 1;
+  }
+  
+  
   // Create food
   for (var i=0; i < 500; i++){
     var x = Math.floor(Math.random()*398)+ 51;
     var y = Math.floor(Math.random()*398)+ 51;
-    if(worldMap.map[x][y] != 2){
+    if(worldMap.map[x][y] != 2 && worldMap.map[x][y] != 1){
       worldMap.map[x][y] = 2;
       worldMap.foodTotal++;
     }
-    if(worldMap.map[x+1][y]  != 2){
+    if(worldMap.map[x+1][y]  != 2 && worldMap.map[x+1][y] != 1){
       worldMap.map[x+1][y]  = 2;
       worldMap.foodTotal++;
     }
-    if(worldMap.map[x][y+1] != 2){
+    if(worldMap.map[x][y+1] != 2 && worldMap.map[x][y+1] != 1){
       worldMap.map[x][y+1] = 2;
       worldMap.foodTotal++;
     }
-    if(worldMap.map[x+1][y+1] != 2){
+    if(worldMap.map[x+1][y+1] != 2 && worldMap.map[x+1][y+1] != 1){
       worldMap.map[x+1][y+1] = 2;
       worldMap.foodTotal++;
     }
@@ -115,19 +126,19 @@ function checkFood()
     for (var i=0; i < 500; i++){
       var x = Math.floor(Math.random()*398)+ 51;
       var y = Math.floor(Math.random()*398)+ 51;
-      if(worldMap.map[x][y] != 2){
+      if(worldMap.map[x][y] != 2 && worldMap.map[x][y] != 1){
         worldMap.map[x][y] = 2;
         worldMap.foodTotal++;
       }
-      if(worldMap.map[x+1][y]  != 2){
+      if(worldMap.map[x+1][y]  != 2 && worldMap.map[x+1][y] != 1){
         worldMap.map[x+1][y]  = 2;
         worldMap.foodTotal++;
       }
-      if(worldMap.map[x][y+1] != 2){
+      if(worldMap.map[x][y+1] != 2 && worldMap.map[x][y+1] != 1){
         worldMap.map[x][y+1] = 2;
         worldMap.foodTotal++;
       }
-      if(worldMap.map[x+1][y+1] != 2){
+      if(worldMap.map[x+1][y+1] != 2 && worldMap.map[x+1][y+1] != 1){
         worldMap.map[x+1][y+1] = 2;
         worldMap.foodTotal++;
       }
@@ -154,21 +165,18 @@ function followWP(r){
     MyAgent.turn(1);
   }
   MyAgent.sense();
-  console.log('0:'+MyAgent.sensors[0].output);
-  console.log('1:'+MyAgent.sensors[1].output);
-  console.log('2:'+MyAgent.sensors[2].output);
-  console.log('3:'+MyAgent.sensors[3].output);
-  console.log('4:'+MyAgent.sensors[4].output);
-  console.log('5:'+MyAgent.sensors[5].output);
-  console.log('6:'+MyAgent.sensors[6].output);
-  console.log('7:'+MyAgent.sensors[7].output);
   drawWorld();
 }
 
 function checkSimRunning()
 {
-  if(simRunning){
+  if(!tickCompleted){
+    console.log('slowdown detected');
+  }
+  if(simRunning && tickCompleted){
+    tickCompleted = false;
     clockTick();
+    tickCompleted = true;
   }
 }
 
@@ -196,13 +204,13 @@ function clockTick()
   brainInputs.push(MyAgent.rot === 3 ? 1:0);
   
   // Get action from brain
-  var action = agentbrain.forward(brainInputs);
+  var action = MyAgent.brain.forward(brainInputs);
   
   // Do brain action
   MyAgent.doAction(action);
   
   // Train brain with reward
-  agentbrain.backward(MyAgent.reward);
+  MyAgent.brain.backward(MyAgent.reward);
   
   for(var dAgent of DumbAgents){
     // Do DumbAgent action
@@ -212,34 +220,35 @@ function clockTick()
   
   // Update Agent readout
   $('#agentDiv').empty();
-  var agentTxt = '';
-  /*
-  var i = 0;
-  for(var s of MyAgent.sensors){
-    agentTxt += 'Sensor'+i+':' + s.output + ' : ';
-    i++;
-  }
-  */
+   
+  var data = [];
   for(var rc of MyAgent.rewardArray){
-    agentTxt += rc[0]+':' + rc[1].toFixed(3) + '<br>';
+    data.push([ rc[0], rc[1].toFixed(3) ]);
   }
-  agentTxt += 'Reward:' + MyAgent.reward.toFixed(3) + '<br>';
-  agentTxt += 'Food AI:' + MyAgent.food.toFixed(3) + '<br>';
-  agentTxt += 'Food DumbAgent1:' + DumbAgents[0].food.toFixed(3) + '<br>';
-  agentTxt += 'Food DumbAgent2:' + DumbAgents[1].food.toFixed(3) + '<br>';
-  agentTxt += 'Travelled AI:' + MyAgent.travelled + '<br>';
-  agentTxt += 'Travelled DumbAgent:' + DumbAgents[0].travelled + '<br>';
-  agentTxt += 'Travelled DumbAgent2:' + DumbAgents[1].travelled + '<br>';
-  agentTxt += 'Runs:' + runs + '<br>';
-  agentTxt += 'Food:' + worldMap.foodTotal + '<br>';
-  agentTxt += 'Sim running:' + simRunning + '<br>'
-  agentTxt += 'Learning:' + agentbrain.learning + '<br>';
+  data.push([ 'Reward',               MyAgent.reward.toFixed(3)     ]);
+  data.push([ '', 'AI Agent', 'DumbAgent1', 'DumbAgent2']);
+  data.push([ 'Food',              MyAgent.food.toFixed(3) , DumbAgents[0].food.toFixed(3), DumbAgents[1].food.toFixed(3) ]);
+  //data.push([ 'Food DumbAgent1',      DumbAgents[0].food.toFixed(3) ]);
+  //data.push([ 'Food DumbAgent2',      DumbAgents[1].food.toFixed(3) ]);
+  data.push([ 'Travelled',         MyAgent.travelled, DumbAgents[0].travelled, DumbAgents[1].travelled ]);
+  //data.push([ 'Travelled DumbAgent',  DumbAgents[0].travelled       ]);
+  //data.push([ 'Travelled DumbAgent2', DumbAgents[1].travelled       ]);
+  data.push([ 'Runs',                 runs ]);
+  data.push([ 'Food',                 worldMap.foodTotal ]);
+  data.push([ 'Sim running',          simRunning ]);
+  data.push([ 'Learning',             MyAgent.brain.learning ]);
+  data.push([ 'experience replay size', MyAgent.brain.experience.length ]);
+  data.push([ 'exploration epsilon',    MyAgent.brain.epsilon.toFixed(3) ]);
+  data.push([ 'age',                     MyAgent.brain.age ]);
+  data.push([ 'average Q-learning loss', MyAgent.brain.average_loss_window.get_average().toFixed(3) ]);
+  data.push([ 'smooth-ish reward',       MyAgent.brain.average_reward_window.get_average().toFixed(3) ]);
+  var agentTxt = simpleTable(data);
   $('#agentDiv').append(agentTxt);
   
   drawAll();
   
-  var eltvar = document.getElementById("eltDiv");
-  agentbrain.visSelf(eltvar);
+  //var eltvar = document.getElementById("eltDiv");
+  //MyAgent.brain.visSelf(eltvar);
 }
 
 function brainMaker()
@@ -274,12 +283,12 @@ opt.epsilon_min = 0.05;
 opt.epsilon_test_time = 0.05;
 opt.layer_defs = layer_defs;
 opt.tdtrainer_options = tdtrainer_options;
-
+var brain;
 return brain = new deepqlearn.Brain(num_inputs, num_actions, opt); // woohoo
 }
 
 function savenet() {
-  var j = agentbrain.value_net.toJSON();
+  var j = MyAgent.brain.value_net.toJSON();
   var t = JSON.stringify(j);
   document.getElementById('brainText').value = t;
 }
@@ -287,15 +296,19 @@ function savenet() {
 function loadnet() {
   var t = document.getElementById('brainText').value;
   var j = JSON.parse(t);
-  agentbrain.value_net.fromJSON(j);
+  MyAgent.brain.value_net.fromJSON(j);
   stoplearn(); // also stop learning
 }
 
 function startlearn() {
-  agentbrain.learning = true;
+  $('#statusTxt').empty();
+  $('#statusTxt').append("Training Active");
+  MyAgent.brain.learning = true;
 }
 function stoplearn() {
-  agentbrain.learning = false;
+  $('#statusTxt').empty();
+  $('#statusTxt').append("Training Disabled");
+  MyAgent.brain.learning = false;
 }
 function runsim() {
   simRunning = true;

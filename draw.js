@@ -3,6 +3,21 @@ function drawAll() {
   drawWorld();
 }
 
+function simpleTable(data)
+{
+  var outTxt = '';
+  outTxt += '<table class="my-table">';
+  for(var row of data){
+    outTxt += '<tr>';
+    for(var item of row){
+      outTxt += '<td>' + item + '</td>';
+    }
+     outTxt += '</tr>';
+  }
+  outTxt += '</table>';
+  return outTxt;
+}
+
 function drawCanvas()
 {
   var canvas = document.getElementById("mainCanvas");
@@ -15,7 +30,7 @@ function drawCanvas()
   //net.layers[1].out_act.w[0]
   var x = 40;
   var y = 20;
-  for(let l of agentbrain.value_net.layers){
+  for(let l of MyAgent.brain.value_net.layers){
     x =  40;
     y += 10;
     if(l.out_act !=undefined){
