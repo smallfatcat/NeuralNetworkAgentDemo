@@ -14,6 +14,47 @@ var World = function()
   }
 }
 
+var SensorEye = function(x,y,rot,range, sensitivity)
+{
+  this.x_offset = x;
+  this.y_offset = y;
+  this.rot = rot;
+  this.range = range;
+  this.outputs = [];
+  this.sensitivity = sensitivity;
+  this.width = 5;
+  for(var m=0;m<this.width;m++){
+    this.outputs.push(0);
+  }
+}
+SensorEye.prototype = {
+  setOutput: function(x,y)
+  {
+      if(this.rot == R_UP){
+        for(var ys = 0; ys >= -this.range; ys--){
+          for(var xs = -this.width +ys; xs<=this.width -ys; xs++){
+            if(worldMap.map[xs+x][ys+y] == 2){
+              this.outputs[this.getScreenX(xs,ys)] = (this.range+ys) / this.range;
+            }
+          }
+        }
+      }
+      
+      
+  },
+  
+  getScreenX: function(x,y,wx,wy)
+  {
+      var newx = 0;
+      var relx = wx - x;
+      var rely = wy - y;
+      if(this.rot == R_UP){
+        newx = (relx * this.width)/(this.width-rely);
+      }
+      return Math.floor(newx);
+  }
+}
+
 var Sensor = function(x,y,rot,range, sensitivity)
 {
   this.x_offset = x;
@@ -259,10 +300,9 @@ Agent.prototype = {
     var wallProximityReward = 0;
     for(var s of this.sensors){
       if(s.sensitivity == 1){
-        wallProximityReward += s.output;
+        wallProximityReward = Math.max(s.output,wallProximityReward);
       }
-    }
-    
+    } 
     var foodReward = Math.max(this.food/20,0);
     var eatenReward = this.justEaten;
     this.justEaten = 0;
@@ -271,7 +311,7 @@ Agent.prototype = {
     
     // Tweak rewards
     foodProximityReward = foodProximityReward/10;
-    wallProximityReward = wallProximityReward/10;
+    wallProximityReward = wallProximityReward/20;
     foodReward = Math.min(foodReward/100,0);
     eatenReward = eatenReward;
     movementReward = movementReward/10;
@@ -285,5 +325,6 @@ Agent.prototype = {
     this.rewardArray.push(['movementReward',movementReward]);
     
     this.reward = foodProximityReward + foodReward + eatenReward + movementReward - wallProximityReward;
+    this.reward = Math.max(this.reward,0);
   }
 }
