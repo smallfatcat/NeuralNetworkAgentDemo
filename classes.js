@@ -23,18 +23,28 @@ var SensorEye = function(x,y,rot,range, sensitivity)
   this.outputs = [];
   this.sensitivity = sensitivity;
   this.width = 5;
-  for(var m=0;m<this.width;m++){
+  for(var m=0;m<(this.width*2)+1;m++){
     this.outputs.push(0);
   }
 }
 SensorEye.prototype = {
   setOutput: function(x,y)
   {
-      if(this.rot == R_UP){
+      //if(this.rot == R_UP){
+      for(var n = 0; n < this.outputs.length ;n++){
+        this.outputs[n] = 0;
+      }
+      if(true){
         for(var ys = 0; ys >= -this.range; ys--){
           for(var xs = -this.width +ys; xs<=this.width -ys; xs++){
-            if(worldMap.map[xs+x][ys+y] == 2){
-              this.outputs[this.getScreenX(xs,ys)] = (this.range+ys) / this.range;
+            var xi = xs + x;
+            var yi = ys + y;
+            if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+              if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+              if(worldMap.map[xi][yi] == this.sensitivity){
+                var pixelID = this.getScreenX(x,y,xi,yi);
+                this.outputs[pixelID] = Math.max((this.range+ys) / this.range, this.outputs[pixelID]);
+              }
             }
           }
         }
@@ -48,10 +58,11 @@ SensorEye.prototype = {
       var newx = 0;
       var relx = wx - x;
       var rely = wy - y;
-      if(this.rot == R_UP){
+      //if(this.rot == R_UP){
         newx = (relx * this.width)/(this.width-rely);
-      }
-      return Math.floor(newx);
+      //}
+      //console.log(Math.floor(newx));
+      return Math.floor(newx + this.width);
   }
 }
 
@@ -125,6 +136,10 @@ var Agent = function()
   this.rewardArray = [];
   this.brain = brainMaker();
   // Add sensors 
+  this.sensors.push(new SensorEye(0,0,R_UP,100,2));
+  this.sensors.push(new SensorEye(0,0,R_UP,100,1));
+  
+  /*OLD EYES
   for(var j = 2; j<3; j++){
     for(var sx = -5; sx< 6; sx++){
       // top
@@ -140,6 +155,9 @@ var Agent = function()
       //this.sensors.push(new Sensor(  5, sy, R_RIGHT, 300, j));
     }
   }
+  */
+  
+  
   // Add mouths
   for(var sx = -5; sx< 6; sx++){
     this.mouths.push(new Mouth(sx, -5));
@@ -265,7 +283,7 @@ Agent.prototype = {
     for(var s of this.sensors){
       s.setOutput(this.x, this.y);
     }
-    
+    /*
     for(var i =0;i<this.sensors.length-1; i+=2){
       if(this.sensors[i].output>this.sensors[i+1].output){
         this.sensors[i+1].output = 0;
@@ -274,7 +292,7 @@ Agent.prototype = {
         this.sensors[i].output = 0;
       }
     }
-    
+    */
   },
   
   eat: function()
@@ -292,17 +310,19 @@ Agent.prototype = {
   calcReward: function()
   {
     var foodProximityReward = 0;
-    for(var s of this.sensors){
-      if(s.sensitivity == 2){
-        foodProximityReward += s.output;
+    for(var s of this.sensors[0].outputs){
+      if(this.sensors[0].sensitivity == 2){
+        foodProximityReward += s;
       }
     }
     var wallProximityReward = 0;
-    for(var s of this.sensors){
-      if(s.sensitivity == 1){
-        wallProximityReward = Math.max(s.output,wallProximityReward);
+    
+    for(var s of this.sensors[1].outputs){
+      if(this.sensors[1].sensitivity == 1){
+        wallProximityReward = Math.max(s,wallProximityReward);
       }
-    } 
+    }
+        
     var foodReward = Math.max(this.food/20,0);
     var eatenReward = this.justEaten;
     this.justEaten = 0;

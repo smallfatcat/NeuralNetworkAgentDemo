@@ -18,7 +18,7 @@ var simRunning = false;
 
 var rotLabels  = ['up','right','down','left'];
 var turnLabels = ['cw', 'ccw'];
-var mapLabels  = ['empty','wall','food','poison','water'];
+var mapLabels  = ['empty','wall','food','poison','water','vis'];
 
 var worldMap = new World();
 buildWorld();
@@ -190,6 +190,13 @@ function clockTick()
   MyAgent.calcReward();
   // get inputs
   var brainInputs = [];
+  for(var pix of MyAgent.sensors[0].outputs){
+    brainInputs.push(pix);
+  }
+  for(var pix of MyAgent.sensors[1].outputs){
+    brainInputs.push(pix);
+  }
+  /*OLD EYES
   for(var s of MyAgent.sensors){
     if(s.rot == MyAgent.rot){
       brainInputs.push(s.output);
@@ -198,6 +205,7 @@ function clockTick()
       brainInputs.push(s.output/4);
     }
   }
+  */
   brainInputs.push(MyAgent.rot === 0 ? 1:0);
   brainInputs.push(MyAgent.rot === 1 ? 1:0);
   brainInputs.push(MyAgent.rot === 2 ? 1:0);
@@ -253,7 +261,7 @@ function clockTick()
 
 function brainMaker()
 {
-var num_inputs = 26; // 22 eyes, each sees 1 color (wall, food proximity), 4 rotation
+var num_inputs = 26; // 2 eyes, each sees 11 pixels color (wall, food proximity), 4 rotation
 var num_actions = 7; // 3 possible actions agent can do
 var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
 var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
