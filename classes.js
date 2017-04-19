@@ -34,7 +34,7 @@ SensorEye.prototype = {
       for(var n = 0; n < this.outputs.length ;n++){
         this.outputs[n] = 0;
       }
-      if(true){
+      if(this.rot == R_UP){
         for(var ys = 0; ys >= -this.range; ys--){
           for(var xs = -this.width +ys; xs<=this.width -ys; xs++){
             var xi = xs + x;
@@ -42,8 +42,53 @@ SensorEye.prototype = {
             if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
               if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
               if(worldMap.map[xi][yi] == this.sensitivity){
-                var pixelID = this.getScreenX(x,y,xi,yi);
+                var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
                 this.outputs[pixelID] = Math.max((this.range+ys) / this.range, this.outputs[pixelID]);
+              }
+            }
+          }
+        }
+      }
+      if(this.rot == R_DOWN){
+        for(var ys = 0; ys <= this.range; ys++){
+          for(var xs = -this.width -ys; xs<=this.width +ys; xs++){
+            var xi = xs + x;
+            var yi = ys + y;
+            if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+              if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 7};
+              if(worldMap.map[xi][yi] == this.sensitivity){
+                var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
+                this.outputs[pixelID] = Math.max((this.range-ys) / this.range, this.outputs[pixelID]);
+              }
+            }
+          }
+        }
+      }
+      if(this.rot == R_RIGHT){
+        for(var xs = 0; xs <= this.range; xs++){
+          for(var ys = -this.width -xs; ys<=this.width +xs; ys++){
+            var xi = xs + x;
+            var yi = ys + y;
+            if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+              if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 7};
+              if(worldMap.map[xi][yi] == this.sensitivity){
+                var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
+                this.outputs[pixelID] = Math.max((this.range-xs) / this.range, this.outputs[pixelID]);
+              }
+            }
+          }
+        }
+      }
+      if(this.rot == R_LEFT){
+        for(var xs = 0; xs >= -this.range; xs--){
+          for(var ys = -this.width +xs; ys<=this.width -xs; ys++){
+            var xi = xs + x;
+            var yi = ys + y;
+            if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+              if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+              if(worldMap.map[xi][yi] == this.sensitivity){
+                var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
+                this.outputs[pixelID] = Math.max((this.range+xs) / this.range, this.outputs[pixelID]);
               }
             }
           }
@@ -53,16 +98,25 @@ SensorEye.prototype = {
       
   },
   
-  getScreenX: function(x,y,wx,wy)
+  getScreenX: function(x,y,wx,wy,rot)
   {
       var newx = 0;
       var relx = wx - x;
       var rely = wy - y;
-      //if(this.rot == R_UP){
-        newx = (relx * this.width)/(this.width-rely);
-      //}
+      if(rot == R_UP){
+        newx = ((relx * this.width)/(rely - this.width)) + this.width;
+      }
+      if(rot == R_DOWN){
+        newx = ((relx * this.width)/(this.width + rely)*-1) + this.width;
+      }
+      if(rot == R_RIGHT){
+        newx = ((rely * this.width)/(this.width + relx)) + this.width;
+      }
+      if(rot == R_LEFT){
+        newx = ((rely * this.width)/(relx - this.width)) + this.width;
+      }
       //console.log(Math.floor(newx));
-      return Math.floor(newx + this.width);
+      return Math.floor(newx);
   }
 }
 
@@ -138,6 +192,8 @@ var Agent = function()
   // Add sensors 
   this.sensors.push(new SensorEye(0,0,R_UP,100,2));
   this.sensors.push(new SensorEye(0,0,R_UP,100,1));
+  this.sensors.push(new SensorEye(0,0,R_DOWN,100,2));
+  this.sensors.push(new SensorEye(0,0,R_DOWN,100,1));
   
   /*OLD EYES
   for(var j = 2; j<3; j++){
