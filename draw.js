@@ -130,6 +130,7 @@ function drawWorld()
         ctx.fillStyle = 'rgb(0,0,0)';
         ctx.fillRect(wx, wy, 1, 1);
       }
+      /*
       // Draw visual field
       if(worldMap.map[wx][wy] == 6){
         ctx.fillStyle = 'rgb(0,0,255)';
@@ -142,6 +143,7 @@ function drawWorld()
         ctx.fillRect(wx, wy, 1, 1);
         worldMap.map[wx][wy] = 0;
       }
+      */
     }
   }
 

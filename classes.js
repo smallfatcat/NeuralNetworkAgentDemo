@@ -40,7 +40,7 @@ SensorEye.prototype = {
             var xi = xs + x;
             var yi = ys + y;
             if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-              if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+              //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
               if(worldMap.map[xi][yi] == this.sensitivity){
                 var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
                 this.outputs[pixelID] = Math.max((this.range+ys) / this.range, this.outputs[pixelID]);
@@ -55,7 +55,7 @@ SensorEye.prototype = {
             var xi = xs + x;
             var yi = ys + y;
             if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-              if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 7};
+              //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 7};
               if(worldMap.map[xi][yi] == this.sensitivity){
                 var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
                 this.outputs[pixelID] = Math.max((this.range-ys) / this.range, this.outputs[pixelID]);
@@ -70,7 +70,7 @@ SensorEye.prototype = {
             var xi = xs + x;
             var yi = ys + y;
             if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-              if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 7};
+              //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 7};
               if(worldMap.map[xi][yi] == this.sensitivity){
                 var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
                 this.outputs[pixelID] = Math.max((this.range-xs) / this.range, this.outputs[pixelID]);
@@ -85,7 +85,7 @@ SensorEye.prototype = {
             var xi = xs + x;
             var yi = ys + y;
             if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-              if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+              //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
               if(worldMap.map[xi][yi] == this.sensitivity){
                 var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
                 this.outputs[pixelID] = Math.max((this.range+xs) / this.range, this.outputs[pixelID]);
@@ -192,9 +192,7 @@ var Agent = function()
   // Add sensors 
   this.sensors.push(new SensorEye(0,0,R_UP,100,2));
   this.sensors.push(new SensorEye(0,0,R_UP,100,1));
-  this.sensors.push(new SensorEye(0,0,R_DOWN,100,2));
-  this.sensors.push(new SensorEye(0,0,R_DOWN,100,1));
-  
+    
   /*OLD EYES
   for(var j = 2; j<3; j++){
     for(var sx = -5; sx< 6; sx++){
@@ -227,7 +225,8 @@ var Agent = function()
 Agent.prototype = {
   doAction: function(action)
   {
-      if(action==0){
+    this.lastAction = action;
+    if(action==0){
       this.advance(1);
       this.eat();
     }
@@ -280,6 +279,7 @@ Agent.prototype = {
     // Move eyes to facing direction
     
     for(var i=0;i< this.sensors.length;i++){
+      /*
       //console.log(runs);
       var tmpx = 0;
       var tmpy = 0;
@@ -295,11 +295,12 @@ Agent.prototype = {
         this.sensors[i].x_offset = tmpy * -1;
         this.sensors[i].y_offset = tmpx * -1;
       }
+      */
       this.sensors[i].rot = this.rot;
     }
     
     this.food -= this.turnCost;
-    this.lastAction = 1;
+    
   },
   
   advance: function(speed)
@@ -326,8 +327,7 @@ Agent.prototype = {
     }
     this.food -= this.moveCost;
     this.travelled++;
-    this.lastAction = 0;
-    
+        
     if(this.x<50)   this.x = 50;
     if(this.x>450) this.x = 450;
     if(this.y<50)   this.y = 50;
@@ -339,6 +339,14 @@ Agent.prototype = {
     for(var s of this.sensors){
       s.setOutput(this.x, this.y);
     }
+    
+    for(var j =0;j<this.sensors[0].outputs.length; j++){
+      // walls hide food
+      if(this.sensors[1].outputs[j] > this.sensors[0].outputs[j]){
+        this.sensors[0].outputs[j] = 0;
+      }
+    }
+    
     /*
     for(var i =0;i<this.sensors.length-1; i+=2){
       if(this.sensors[i].output>this.sensors[i+1].output){
@@ -375,22 +383,26 @@ Agent.prototype = {
     
     for(var s of this.sensors[1].outputs){
       if(this.sensors[1].sensitivity == 1){
-        wallProximityReward = Math.max(s,wallProximityReward);
+        wallProximityReward += s;
       }
     }
+    wallProximityReward = wallProximityReward / this.sensors[1].outputs.length
         
     var foodReward = Math.max(this.food/20,0);
     var eatenReward = this.justEaten;
     this.justEaten = 0;
     
-    var movementReward = this.lastAction === 0 ? 1: 0; 
+    var movementReward = 0;
+    if(this.lastAction == 0 || this.lastAction == 5 || this.lastAction == 6){
+      movementReward =  1; 
+    }
     
     // Tweak rewards
     foodProximityReward = foodProximityReward/10;
-    wallProximityReward = wallProximityReward/20;
+    wallProximityReward = wallProximityReward/2;
     foodReward = Math.min(foodReward/100,0);
     eatenReward = eatenReward;
-    movementReward = movementReward/10;
+    movementReward = movementReward/2;
     
     // Store reward contributors
     this.rewardArray = [];
