@@ -81,6 +81,9 @@ function buildWorld()
     worldMap.map[i][150]  = 1;
     worldMap.map[i][350]  = 1;
   }
+  for(var i = 350; i < 450; i++){
+    worldMap.map[250][i]  = 1;
+  }
   
   
   // Create food

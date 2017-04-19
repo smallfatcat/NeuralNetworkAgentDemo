@@ -94,6 +94,20 @@ function drawCanvas()
         ctx.fill();
       }
     }
+    else{
+      var k = 0;
+      for(var w =0;w<l.out_depth;w++){
+        //console.log(w);
+        k++;
+        x += 10;
+        if (k>50){x = 50;y+=10; k = 1};
+        ctx.beginPath();
+        ctx.arc(x,y,5,0,2*Math.PI);
+        //var c = parseInt((w+1)/2*255);
+        ctx.fillStyle='rgb(128,200,128)';
+        ctx.fill();
+      }
+    }
   }
 }
 
