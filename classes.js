@@ -116,7 +116,7 @@ SensorEye.prototype = {
         newx = ((rely * this.width)/(relx - this.width)) + this.width;
       }
       //console.log(Math.floor(newx));
-      return Math.floor(newx);
+      return Math.round(newx);
   }
 }
 

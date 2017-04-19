@@ -1,6 +1,57 @@
 function drawAll() {
   drawCanvas();
   drawWorld();
+  // Update Agent readout
+  updateStatus();
+  updateAgentReadout(); 
+}
+
+function updateStatus(){
+  var statusTxt = ''
+  if(simRunning){
+    statusTxt += 'Sim Running - ';
+  }
+  else{
+    statusTxt += 'Sim Paused - ';
+  }
+  if(MyAgent.brain.learning){
+    statusTxt += 'Training Active';
+  }
+  else{
+    statusTxt += 'Training Disabled';
+  }
+  
+  $('#statusTxt').empty();
+  $('#statusTxt').append(statusTxt);
+}
+
+function updateAgentReadout()
+{
+  $('#agentDiv').empty();
+   
+  var data = [];
+  for(var rc of MyAgent.rewardArray){
+    data.push([ rc[0], rc[1].toFixed(3) ]);
+  }
+  data.push([ 'Reward',               MyAgent.reward.toFixed(3)     ]);
+  data.push([ '', 'AI Agent', 'DumbAgent1', 'DumbAgent2']);
+  data.push([ 'Food',              MyAgent.food.toFixed(3) , DumbAgents[0].food.toFixed(3), DumbAgents[1].food.toFixed(3) ]);
+  //data.push([ 'Food DumbAgent1',      DumbAgents[0].food.toFixed(3) ]);
+  //data.push([ 'Food DumbAgent2',      DumbAgents[1].food.toFixed(3) ]);
+  data.push([ 'Travelled',         MyAgent.travelled, DumbAgents[0].travelled, DumbAgents[1].travelled ]);
+  //data.push([ 'Travelled DumbAgent',  DumbAgents[0].travelled       ]);
+  //data.push([ 'Travelled DumbAgent2', DumbAgents[1].travelled       ]);
+  data.push([ 'Runs',                 runs ]);
+  data.push([ 'Food',                 worldMap.foodTotal ]);
+  data.push([ 'Sim running',          simRunning ]);
+  data.push([ 'Learning',             MyAgent.brain.learning ]);
+  data.push([ 'experience replay size', MyAgent.brain.experience.length ]);
+  data.push([ 'exploration epsilon',    MyAgent.brain.epsilon.toFixed(3) ]);
+  data.push([ 'age',                     MyAgent.brain.age ]);
+  data.push([ 'average Q-learning loss', MyAgent.brain.average_loss_window.get_average().toFixed(3) ]);
+  data.push([ 'smooth-ish reward',       MyAgent.brain.average_reward_window.get_average().toFixed(3) ]);
+  var agentTxt = simpleTable(data);
+  $('#agentDiv').append(agentTxt);
 }
 
 function simpleTable(data)
