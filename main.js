@@ -1,284 +1,267 @@
-var timer1value = 0;
-var neurons = [];
-var layers = [];
-var links = [];
-var testData = [];
-var currentError = [0,0];
-var testNumber = 0;
-var testCounter = 0;
-var timer1;
+// Title   : Simple AI Agent Demo - using neural nets
+// Author  : David Imrie
+// Date    : April 2017
+// Contact : @smallfatcat
+// Repo    : https://github.com/smallfatcat/nettestv1
+// version : Alpha 0.1
 
-$(document).ready( on_page_ready );
+//
+// Neural Nets Powered by : http://cs.stanford.edu/people/karpathy/convnetjs/
+//                        : https://github.com/karpathy/convnetjs
+//                        : LICENSE - MIT (see LICENSE file)
+//
 
+'use strict';
+const R_UP    = 0;
+const R_RIGHT = 1;
+const R_DOWN  = 2;
+const R_LEFT  = 3;
+const T_CW    = 0;
+const T_CCW   = 1;
 
-function on_page_ready( )
-{
-  var dt = new Date();
-  var UTCtime = dt.toLocaleString();
+var tickCompleted = true;
+var trainingRuns = 0;
+var testdata = [];
+var label = [];
+var runs = 0;
+var lastError = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+label.push(6);
+//var net = new convnetjs.Net();
+var simRunning = false;
+
+var rotLabels  = ['up','right','down','left'];
+var turnLabels = ['cw', 'ccw'];
+var mapLabels  = ['empty','wall','food','poison','water','vis'];
+
+var worldMap = new World();
+buildWorld();
+
+var MyAgent = new Agent();
+MyAgent.x = 250;
+MyAgent.y = 250;
+
+var DumbAgents = [];
+var DumbAgent = new Agent();
+DumbAgent.x = 250;
+DumbAgent.y = 250;
+DumbAgents.push(DumbAgent);
+
+var DumbAgent2 = new Agent();
+DumbAgent2.x = 250;
+DumbAgent2.y = 250;
+DumbAgents.push(DumbAgent2);
+
+var routeTimer;
+
+var loopTimer;
+
+$(document).ready( start );
+
+function start() {
   
-  $( '#mainDiv' ).append( ': loaded at '+UTCtime);
-  console.log('loaded');
-  
-  timer1 = setInterval(runSimulation, 10);
-  
-  createlayers();
-  createNeurons();
-  createTestData();
-  createlinks();
-  randomize();
-  calcOutput();
   drawAll();
-
+  loopTimer = setInterval(checkSimRunning, 10);
+  
 }
 
-
-function runSimulation()
+function buildWorld()
 {
-  timer1value++;
-  $( '#elapsedDiv' ).empty( );
-  $( '#elapsedDiv' ).append( timer1value + ' runs');
-  backPropogate();
-  runTest();
-  drawAll();
+  // Create outer walls
+  for (var x = 50; x < 451; x++){
+    worldMap.map[x][50]  = 1;
+    worldMap.map[x][450] = 1;
+  }
+  for (var y = 50; y < 451; y++){
+    worldMap.map[50][y]  = 1;
+    worldMap.map[450][y] = 1;
+  }
+  // Inside walls
+  for (var i = 150; i < 351; i++){
+    worldMap.map[150][i]  = 1;
+    worldMap.map[i][150]  = 1;
+    worldMap.map[i][350]  = 1;
+  }
+  
+  
+  // Create food
+  for (var i=0; i < 500; i++){
+    var x = Math.floor(Math.random()*398)+ 51;
+    var y = Math.floor(Math.random()*398)+ 51;
+    if(worldMap.map[x][y] != 2 && worldMap.map[x][y] != 1){
+      worldMap.map[x][y] = 2;
+      worldMap.foodTotal++;
+    }
+    if(worldMap.map[x+1][y]  != 2 && worldMap.map[x+1][y] != 1){
+      worldMap.map[x+1][y]  = 2;
+      worldMap.foodTotal++;
+    }
+    if(worldMap.map[x][y+1] != 2 && worldMap.map[x][y+1] != 1){
+      worldMap.map[x][y+1] = 2;
+      worldMap.foodTotal++;
+    }
+    if(worldMap.map[x+1][y+1] != 2 && worldMap.map[x+1][y+1] != 1){
+      worldMap.map[x+1][y+1] = 2;
+      worldMap.foodTotal++;
+    }
+  }
 }
 
-function randomize()
+function checkFood()
 {
-  /*
-  for(let n of neurons){
-    if(n.layer == 0){
-      n.value = (Math.random()*2)-1;
+  var foodTotal = worldMap.foodTotal;
+  if(foodTotal < 1000){
+    // Create food
+    for (var i=0; i < 500; i++){
+      var x = Math.floor(Math.random()*398)+ 51;
+      var y = Math.floor(Math.random()*398)+ 51;
+      if(worldMap.map[x][y] != 2 && worldMap.map[x][y] != 1){
+        worldMap.map[x][y] = 2;
+        worldMap.foodTotal++;
+      }
+      if(worldMap.map[x+1][y]  != 2 && worldMap.map[x+1][y] != 1){
+        worldMap.map[x+1][y]  = 2;
+        worldMap.foodTotal++;
+      }
+      if(worldMap.map[x][y+1] != 2 && worldMap.map[x][y+1] != 1){
+        worldMap.map[x][y+1] = 2;
+        worldMap.foodTotal++;
+      }
+      if(worldMap.map[x+1][y+1] != 2 && worldMap.map[x+1][y+1] != 1){
+        worldMap.map[x+1][y+1] = 2;
+        worldMap.foodTotal++;
+      }
+    }
+  }
+}
+  
+function checkSimRunning()
+{
+  if(!tickCompleted){
+    console.log('slowdown detected');
+  }
+  if(simRunning && tickCompleted){
+    tickCompleted = false;
+    clockTick();
+    tickCompleted = true;
+  }
+     
+  // Draw Everything
+  drawAll();
+  
+}
+
+function clockTick()
+{
+  runs++;
+  checkFood();
+  // Calculate sensor readings
+  MyAgent.sense();
+  // Calculate rewards
+  MyAgent.calcReward();
+  // get inputs
+  var brainInputs = [];
+  for(var pix of MyAgent.sensors[0].outputs){
+    brainInputs.push(pix);
+  }
+  for(var pix of MyAgent.sensors[1].outputs){
+    brainInputs.push(pix);
+  }
+  /*OLD EYES
+  for(var s of MyAgent.sensors){
+    if(s.rot == MyAgent.rot){
+      brainInputs.push(s.output);
+    }
+    else{
+      brainInputs.push(s.output/4);
     }
   }
   */
-  for(let l of links){
-    l.weight = ( parseInt(Math.random()*400)/200)-1;
-  }
-}
-
-function runTest()
-{
-  testCounter++;
-  if(testCounter>300){
-    testCounter = 0;
-    testNumber++;
-    if(testNumber > 5){testNumber = 0;}
-  }
-  for(let i=0;i<4;i++){
-    neurons[i].value = testData[testNumber][i];
-  }
-  calcOutput();
-  currentError[0] = testData[testNumber][4]-neurons[4].value;
-  currentError[1] = testData[testNumber][5]-neurons[5].value;
-}
-
-function getError()
-{
-  var error = [0,0];
-  error[0] = testData[testNumber][4]-neurons[4].value;
-  error[1] = testData[testNumber][5]-neurons[5].value;
-  return error;
-}
-
-function backPropogate()
-{
-  for(let link of links){
-    if(true){
-      var baseError = getError();
-      var baseWeight = link.weight;
-      link.weight = baseWeight - 0.00001;
-      calcOutput();
-      var reducedError = getError();
-      link.weight = baseWeight + 0.00001;
-      calcOutput();
-      var increasedError = getError();
-      if(absError(reducedError)<absError(increasedError)){
-        link.weight = baseWeight - 0.00001;
-      }
-      else if(absError(increasedError)< absError(baseError))
-      {
-        link.weight = baseWeight + 0.00001;
-      }
-      else{
-        link.weight = baseWeight;
-      }
-      if(link.weight < -1){link.weight = -1};
-      if(link.weight > 1){link.weight = 1};
-    }
-  }
-}
-
-function absError(error)
-{
-  //return Math.abs(error[0])+Math.abs(error[1]);
-  return max(Math.abs(error[0]),Math.abs(error[1]));
-}
-
-function max(a,b)
-{
-  if (a > b){
-    return a;
-  }
-  else{
-    return b;
-  }
-}
-
-function calcOutput()
-{
-  for(let n of neurons){
-    if(n.layer == 1){
-      n.value = 0;
-    }
-  }
-  for(let link of links){
-    let value = neurons[link.from].value;
-    let weight = link.weight;
-    let output = weight*value;
-    neurons[link.to].value += output;
-  }
-  for(let n of neurons){
-    if(n.layer==1){
-      if(n.value>1){n.value = 1;}
-      if(n.value<-1){n.value = -1;}
-      //n.value = n.value/4;
-    }
-  }
-}
-
-// Draw functions
-
-function drawAll()
-{
-  drawCanvas();
-  drawTable();
-}
-
-function drawCanvas()
-{
-  var canvas = document.getElementById("mainCanvas");
-  var ctx = canvas.getContext("2d");
+  brainInputs.push(MyAgent.rot === 0 ? 1:0);
+  brainInputs.push(MyAgent.rot === 1 ? 1:0);
+  brainInputs.push(MyAgent.rot === 2 ? 1:0);
+  brainInputs.push(MyAgent.rot === 3 ? 1:0);
   
-  ctx.fillStyle = 'rgb(128,128,255)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Get action from brain
+  var action = MyAgent.brain.forward(brainInputs);
   
-  for(let n of neurons){
-    ctx.beginPath();
-    ctx.arc(n.x,n.y,10,0,2*Math.PI);
-    var c = parseInt((n.value+1)/2*255);
-    ctx.fillStyle='rgb('+c+','+c+','+c+')';
-    ctx.fill();
-  }
-  for(let link of links){
-    ctx.beginPath();
-    ctx.moveTo(neurons[link.from].x+10, neurons[link.from].y);
-    ctx.lineTo(neurons[link.to].x-10,   neurons[link.to].y);
-    var c = parseInt((link.weight+1)/2*255);
-    ctx.strokeStyle='rgb('+c+','+c+','+c+')';
-    ctx.lineWidth=2;
-    ctx.stroke();
-  }
-}
-
-function drawTable()
-{
-  $( '#dataTable' ).empty( );
-  // Neuron table
-  var table = '';
-  table += '<table><tr><th>Neuron</th><th>Value</th></tr>';
-  for(let n of neurons){
-    table += '<tr><td>'+n.id+'</td><td>'+n.value+'</td></tr>';
-  }
-  table += '</table>';
-  // Link table
-  table += '<table><tr><th>From</th><th>To</th><th>Weight</th></tr>';
-  for(let l of links){
-    table += '<tr><td>'+l.from+'</td><td>'+l.to+'</td><td>'+l.weight+'</td></tr>';
-  }
-  table += '</table>';
-  // Error table
-  table += '<table><tr><th>Neuron</th><th>Output</th><th>Expected</th><th>Error</th></tr>';
-  table += '<tr><td>'+4+'</td><td>'+neurons[4].value+'</td><td>'+testData[testNumber][4]+'</td><td>'+currentError[0]+'</td></tr>';
-  table += '<tr><td>'+5+'</td><td>'+neurons[5].value+'</td><td>'+testData[testNumber][5]+'</td><td>'+currentError[1]+'</td></tr>';
-  table += '</table>';
-  // data table
-  table += '<table><tr><td>Absolute Error</td><td>'+absError(currentError)+'</td></tr></table>';
-  $( '#dataTable' ).append( table);
+  // Do brain action
+  MyAgent.doAction(action);
   
-}
-
-// Create Functions
-
-function createTestData()
-{
-  testData.push([-1,-1,-1,1,-1,1]);
-  testData.push([-1,-1,1,1,1,-1]);
-  testData.push([-1,1,1,1,1,1]);
-  testData.push([1,-1,-1,-1,-1,1]);
-  testData.push([1,1,-1,-1,1,-1]);
-  testData.push([1,1,1,-1,1,1]);
-}
-
-function createlayers()
-{
-  var layer = new Object();
-  layer.id = 0;
-  layer.nCount = 4;
-  layer.label = 'input';
-  layers.push(layer);
-  var layer = new Object();
-  layer.nCount = 2;
-  layer.id = 1;
-  layer.label = 'output';
-  layers.push(layer);
-}
-
-function createNeurons(){
-  let neuronID = 0;
-  for(let layer of layers){
-    for(let i=0;i<layer.nCount;i++){
-      var n = new Object();
-      n.id = neuronID;
-      neuronID++;
-      n.layer = layer.id;
-      n.x = 50+(layer.id*50);
-      n.y = 50+(i*50+(layer.id*50));
-      n.value = 1;
-      neurons.push(n);
-    }
+  // Train brain with reward
+  MyAgent.brain.backward(MyAgent.reward);
+  
+  for(var dAgent of DumbAgents){
+    // Do DumbAgent action
+    var actionDumb = Math.floor( Math.random()*7);
+    dAgent.doAction(actionDumb);
   }
 }
 
-function createlinks()
+// Adapted from deepqlearn demo by @karpathy from 
+// http://cs.stanford.edu/people/karpathy/convnetjs/
+function brainMaker()
 {
-  for(let i=0;i<layers[0].nCount;i++){
-    var link = new Object();
-    link.from = i;
-    link.to = 4;
-    link.weight = 1;
-    links.push(link);
-    var link = new Object();
-    link.from = i;
-    link.to = 5;
-    link.weight = 1;
-    links.push(link);
-  }
+  var num_inputs = 26; // 2 eyes, each sees 11 pixels color (wall, food proximity), 4 rotation
+  var num_actions = 7; // 3 possible actions agent can do
+  var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
+  var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
+
+  // the value function network computes a value of taking any of the possible actions
+  // given an input state. Here we specify one explicitly the hard way
+  // but user could also equivalently instead use opt.hidden_layer_sizes = [20,20]
+  // to just insert simple relu hidden layers.
+  var layer_defs = [];
+  layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
+  layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+  layer_defs.push({type:'regression', num_neurons:num_actions});
+
+  // options for the Temporal Difference learner that trains the above net
+  // by backpropping the temporal difference learning rule.
+  var tdtrainer_options = {learning_rate:0.001, momentum:0.0, batch_size:64, l2_decay:0.01};
+
+  var opt = {};
+  opt.temporal_window = temporal_window;
+  opt.experience_size = 30000;
+  opt.start_learn_threshold = 1000;
+  opt.gamma = 0.7;
+  opt.learning_steps_total = 200000;
+  opt.learning_steps_burnin = 3000;
+  opt.epsilon_min = 0.05;
+  opt.epsilon_test_time = 0.05;
+  opt.layer_defs = layer_defs;
+  opt.tdtrainer_options = tdtrainer_options;
+  var brain;
+  return brain = new deepqlearn.Brain(num_inputs, num_actions, opt); // woohoo
 }
 
-// Click Functions
-
-function onClickStep(){
-  runSimulation();
+function savenet() {
+  var j = MyAgent.brain.value_net.toJSON();
+  var t = JSON.stringify(j);
+  document.getElementById('brainText').value = t;
 }
 
-function onClickRand(){
-  randomize();
+function loadnet() {
+  var t = document.getElementById('brainText').value;
+  var j = JSON.parse(t);
+  MyAgent.brain.value_net.fromJSON(j);
+  stoplearn(); // also stop learning
 }
 
-function onClickPause(){
-  clearInterval(timer1);
+function startlearn() {
+  MyAgent.brain.learning = true;
+}
+function stoplearn() {
+  MyAgent.brain.learning = false;
+}
+function runsim() {
+  simRunning = true;
+}
+function pausesim() {
+  simRunning = false;
 }
 
-function onClickPlay(){
-  timer1 = setInterval(runSimulation, 10);
-}
+
+
