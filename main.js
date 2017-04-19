@@ -214,8 +214,10 @@ function brainMaker()
   layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
   layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
   layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
   layer_defs.push({type:'regression', num_neurons:num_actions});
 
   // options for the Temporal Difference learner that trains the above net
@@ -230,7 +232,7 @@ function brainMaker()
   opt.learning_steps_total = 200000;
   opt.learning_steps_burnin = 3000;
   opt.epsilon_min = 0.05;
-  opt.epsilon_test_time = 0.05;
+  opt.epsilon_test_time = 0.01;
   opt.layer_defs = layer_defs;
   opt.tdtrainer_options = tdtrainer_options;
   var brain;

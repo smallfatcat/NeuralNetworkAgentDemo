@@ -179,6 +179,7 @@ var Agent = function()
   this.y = 0;
   this.rot = R_UP;
   this.lastAction = 0;
+  this.collided = false;
   this.reward = 0;
   this.food = 0;
   this.justEaten = 0;
@@ -305,24 +306,37 @@ Agent.prototype = {
   
   advance: function(speed)
   {
+    this.collided = false;
     if(this.rot==R_UP){
       if(worldMap.map[this.x][this.y - speed] != 1){
         this.y -= speed;
+      }
+      else{
+        this.collided = true;
       }
     }
     if(this.rot==R_DOWN){
       if(worldMap.map[this.x][this.y + speed] != 1){
         this.y += speed;
       }
+      else{
+        this.collided = true;
+      }
     }
     if(this.rot==R_LEFT){
       if(worldMap.map[this.x - speed][this.y] != 1){
         this.x -= speed;
       }
+      else{
+        this.collided = true;
+      }
     }
     if(this.rot==R_RIGHT){
       if(worldMap.map[this.x + speed][this.y] != 1){
         this.x += speed;
+      }
+      else{
+        this.collided = true;
       }
     }
     this.food -= this.moveCost;
@@ -394,7 +408,12 @@ Agent.prototype = {
     
     var movementReward = 0;
     if(this.lastAction == 0 || this.lastAction == 5 || this.lastAction == 6){
-      movementReward =  1; 
+      if(this.collided){
+        movementReward =  0; 
+      }
+      else{
+        movementReward =  1; 
+      }
     }
     
     // Tweak rewards

@@ -36,11 +36,7 @@ function updateAgentReadout()
   data.push([ 'Reward',               MyAgent.reward.toFixed(3)     ]);
   data.push([ '', 'AI Agent', 'DumbAgent1', 'DumbAgent2']);
   data.push([ 'Food',              MyAgent.food.toFixed(3) , DumbAgents[0].food.toFixed(3), DumbAgents[1].food.toFixed(3) ]);
-  //data.push([ 'Food DumbAgent1',      DumbAgents[0].food.toFixed(3) ]);
-  //data.push([ 'Food DumbAgent2',      DumbAgents[1].food.toFixed(3) ]);
   data.push([ 'Travelled',         MyAgent.travelled, DumbAgents[0].travelled, DumbAgents[1].travelled ]);
-  //data.push([ 'Travelled DumbAgent',  DumbAgents[0].travelled       ]);
-  //data.push([ 'Travelled DumbAgent2', DumbAgents[1].travelled       ]);
   data.push([ 'Runs',                 runs ]);
   data.push([ 'Food',                 worldMap.foodTotal ]);
   data.push([ 'Sim running',          simRunning ]);
