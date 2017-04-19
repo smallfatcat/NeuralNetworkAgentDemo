@@ -243,6 +243,8 @@ function savenet() {
   var j = MyAgent.brain.value_net.toJSON();
   var t = JSON.stringify(j);
   document.getElementById('brainText').value = t;
+  $('#loadTxt').empty();
+  $('#loadTxt').append('Current Net Saved');
 }
 
 function loadnet() {
@@ -250,6 +252,8 @@ function loadnet() {
   var j = JSON.parse(t);
   MyAgent.brain.value_net.fromJSON(j);
   stoplearn(); // also stop learning
+  $('#loadTxt').empty();
+  $('#loadTxt').append('Net Loaded');
 }
 
 function startlearn() {
