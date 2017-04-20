@@ -81,19 +81,23 @@ function drawCanvas()
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
   //net.layers[1].out_act.w[0]
-  var x = 40;
+  var x = 70;
   var y = 20;
   for(let l of MyAgent.brain.value_net.layers){
-    x =  40;
+    x =  70;
     y += 10;
+    ctx.font = "8px Arial";
+    ctx.fillStyle='rgb(255,255,255)';
+    ctx.fillText(l.layer_type.toUpperCase(),10,y+3);
     // draw each neuron
     if(l.out_act !=undefined){
+      
       var k = 0;
       for(let w of l.out_act.w){
         //console.log(w);
         k++;
         x += 10;
-        if (k>50){x = 50;y+=10; k = 1};
+        if (k>50){x = 80;y+=10; k = 1};
         ctx.beginPath();
         ctx.arc(x,y,5,0,2*Math.PI);
         var c = parseInt((w+1)/2*255);
@@ -108,7 +112,7 @@ function drawCanvas()
         //console.log(w);
         k++;
         x += 10;
-        if (k>50){x = 50;y+=10; k = 1};
+        if (k>50){x = 80;y+=10; k = 1};
         ctx.beginPath();
         ctx.arc(x,y,5,0,2*Math.PI);
         //var c = parseInt((w+1)/2*255);
@@ -159,40 +163,43 @@ function drawWorld()
   // Clear
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   
-  // Draw MyAgent
-  ctx.beginPath();
-  ctx.fillStyle = 'rgb(255,64,64)';
-  ctx.fillRect(MyAgent.x-5, MyAgent.y-5, 11, 11);
+  // Draw Environment
+  for(var wx=0; wx <500; wx++){
+    for(var wy=0; wy <500; wy++){
+      // Draw Walls
+      if(worldMap.map[wx][wy] == 1){
+        ctx.fillStyle = 'rgb(255,64,64)';
+        ctx.fillRect(wx, wy, 1, 1);
+      }
+      // Draw food
+      if(worldMap.map[wx][wy] == 2){
+        ctx.fillStyle = 'rgb(0,0,0)';
+        ctx.fillRect(wx, wy, 1, 1);
+      }
+      
+      // Draw visual field
+      if(worldMap.map[wx][wy] == 6){
+        ctx.fillStyle = 'rgb(230,230,255)';
+        ctx.fillRect(wx, wy, 1, 1);
+        worldMap.map[wx][wy] = 0;
+      }
+      /*
+      // Draw visual field
+      if(worldMap.map[wx][wy] == 7){
+        ctx.fillStyle = 'rgb(0,0,255)';
+        ctx.fillRect(wx, wy, 1, 1);
+        worldMap.map[wx][wy] = 0;
+      }
+      */
+    }
+  }
   
-  var p = 10;
-  var cx = MyAgent.x;
-  var cy = MyAgent.y;
-  ctx.beginPath();
-  if(MyAgent.rot == 3){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx-p, cy);
-  }
-  if(MyAgent.rot == 1){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx+p, cy);
-  }
-  if(MyAgent.rot == 0){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx, cy-p);
-  }
-  if(MyAgent.rot == 2){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx, cy+p);
-  }
-  ctx.strokeStyle='rgb(0,0,0)';
-  ctx.lineWidth=2;
-  ctx.stroke();
-  
+    
   for(var dAgent of DumbAgents){
     // Draw DumbAgent
     ctx.beginPath();
     ctx.fillStyle = 'rgb(64,255,64)';
-    ctx.fillRect(dAgent.x-5, dAgent.y-5, 11, 11);
+    ctx.fillRect(dAgent.x-5.5, dAgent.y-5.5, 11, 11);
     
     var p = 10;
     var cx = dAgent.x;
@@ -219,34 +226,33 @@ function drawWorld()
     ctx.stroke();
   }  
     
-  // Draw Environment
-  for(var wx=0; wx <500; wx++){
-    for(var wy=0; wy <500; wy++){
-      // Draw Walls
-      if(worldMap.map[wx][wy] == 1){
-        ctx.fillStyle = 'rgb(255,64,64)';
-        ctx.fillRect(wx, wy, 1, 1);
-      }
-      // Draw food
-      if(worldMap.map[wx][wy] == 2){
-        ctx.fillStyle = 'rgb(0,0,0)';
-        ctx.fillRect(wx, wy, 1, 1);
-      }
-      /*
-      // Draw visual field
-      if(worldMap.map[wx][wy] == 6){
-        ctx.fillStyle = 'rgb(0,0,255)';
-        ctx.fillRect(wx, wy, 1, 1);
-        worldMap.map[wx][wy] = 0;
-      }
-      // Draw visual field
-      if(worldMap.map[wx][wy] == 7){
-        ctx.fillStyle = 'rgb(0,0,255)';
-        ctx.fillRect(wx, wy, 1, 1);
-        worldMap.map[wx][wy] = 0;
-      }
-      */
-    }
+  // Draw MyAgent
+  ctx.beginPath();
+  ctx.fillStyle = 'rgb(255,64,64)';
+  ctx.fillRect(MyAgent.x-5.5, MyAgent.y-5.5, 11, 11);
+  
+  var p = 10;
+  var cx = MyAgent.x;
+  var cy = MyAgent.y;
+  ctx.beginPath();
+  if(MyAgent.rot == 3){
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx-p, cy);
   }
+  if(MyAgent.rot == 1){
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx+p, cy);
+  }
+  if(MyAgent.rot == 0){
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx, cy-p);
+  }
+  if(MyAgent.rot == 2){
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx, cy+p);
+  }
+  ctx.strokeStyle='rgb(0,0,0)';
+  ctx.lineWidth=2;
+  ctx.stroke();
 
 }

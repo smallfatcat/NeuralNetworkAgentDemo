@@ -24,7 +24,7 @@ var trainingRuns = 0;
 var testdata = [];
 var label = [];
 var runs = 0;
-var cycleTraining = false;
+var cycleTraining = true;
 var lastError = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 label.push(6);
 //var net = new convnetjs.Net();
@@ -59,9 +59,9 @@ var loopTimer;
 $(document).ready( start );
 
 function start() {
-  MyAgent.brain.learning = false;
-  clockTick();
-  MyAgent.brain.learning = true;
+  //MyAgent.brain.learning = false;
+  //clockTick();
+  //MyAgent.brain.learning = true;
   drawAll();
   loopTimer = setInterval(checkSimRunning, 10);
   
@@ -147,7 +147,7 @@ function checkSimRunning()
   }
   if(simRunning && tickCompleted){
     if(cycleTraining){
-      if(runs%1000 == 0){
+      if(runs%100 == 0){
         if(MyAgent.brain.learning){
           MyAgent.brain.learning = false;
         }
@@ -223,7 +223,7 @@ function brainMaker()
 {
   var num_inputs = 26; // 2 eyes, each sees 11 pixels color (wall, food proximity), 4 rotation
   var num_actions = 8; // 3 possible actions agent can do
-  var temporal_window = 3; // amount of temporal memory. 0 = agent lives in-the-moment :)
+  var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
   var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
 
   // the value function network computes a value of taking any of the possible actions
@@ -232,11 +232,9 @@ function brainMaker()
   // to just insert simple relu hidden layers.
   var layer_defs = [];
   layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
-  layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
-  
+  layer_defs.push({type:'fc', num_neurons: 60, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 30, activation:'relu'});
+    
   layer_defs.push({type:'regression', num_neurons:num_actions});
 
   // options for the Temporal Difference learner that trains the above net
@@ -296,6 +294,26 @@ function cycletrain() {
   else{
     cycleTraining = true;
   }
+}
+
+function getLineCoords(x1,y1,x2,y2)
+{
+  var lineCoords = [];
+  if(x1==x2){
+    var miny = Math.min(y1,y2);
+    var maxy = Math.max(y1,y2);
+    for(var i = miny; i <= maxy; i++){
+      lineCoords.push([x1,i]);
+    }
+  }
+  if(y1==y2){
+    var minx = Math.min(x1,x2);
+    var maxx = Math.max(x1,x2);
+    for(var i = minx; i <= maxx; i++){
+      lineCoords.push([i,y1]);
+    }
+  }
+  return lineCoords;
 }
 
 

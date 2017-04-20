@@ -30,72 +30,75 @@ var SensorEye = function(x,y,rot,range, sensitivity)
 SensorEye.prototype = {
   setOutput: function(x,y)
   {
-      //if(this.rot == R_UP){
-      for(var n = 0; n < this.outputs.length ;n++){
-        this.outputs[n] = 0;
-      }
-      if(this.rot == R_UP){
-        for(var ys = 0; ys >= -this.range; ys--){
-          for(var xs = -this.width +ys; xs<=this.width -ys; xs++){
-            var xi = xs + x;
-            var yi = ys + y;
-            if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-              //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
-              if(worldMap.map[xi][yi] == this.sensitivity){
-                var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
-                this.outputs[pixelID] = Math.max((this.range+ys) / this.range, this.outputs[pixelID]);
-              }
+    //if(this.rot == R_UP){
+    for(var n = 0; n < this.outputs.length ;n++){
+      this.outputs[n] = 0;
+    }
+    if(this.rot == R_UP){
+      for(var ys = 0; ys >= -this.range; ys--){
+        for(var xs = -this.width +ys; xs<=this.width -ys; xs++){
+          var xi = xs + x;
+          var yi = ys + y;
+          if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+            if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+            if(worldMap.map[xi][yi] == this.sensitivity){
+              var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
+              this.outputs[pixelID] = Math.max((this.range+ys) / this.range, this.outputs[pixelID]);
             }
           }
         }
       }
-      if(this.rot == R_DOWN){
-        for(var ys = 0; ys <= this.range; ys++){
-          for(var xs = -this.width -ys; xs<=this.width +ys; xs++){
-            var xi = xs + x;
-            var yi = ys + y;
-            if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-              //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 7};
-              if(worldMap.map[xi][yi] == this.sensitivity){
-                var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
-                this.outputs[pixelID] = Math.max((this.range-ys) / this.range, this.outputs[pixelID]);
-              }
+    }
+    if(this.rot == R_DOWN){
+      for(var ys = 0; ys <= this.range; ys++){
+        for(var xs = -this.width -ys; xs<=this.width +ys; xs++){
+          var xi = xs + x;
+          var yi = ys + y;
+          if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+            if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+            if(worldMap.map[xi][yi] == this.sensitivity){
+              var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
+              this.outputs[pixelID] = Math.max((this.range-ys) / this.range, this.outputs[pixelID]);
             }
           }
         }
       }
-      if(this.rot == R_RIGHT){
-        for(var xs = 0; xs <= this.range; xs++){
-          for(var ys = -this.width -xs; ys<=this.width +xs; ys++){
-            var xi = xs + x;
-            var yi = ys + y;
-            if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-              //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 7};
-              if(worldMap.map[xi][yi] == this.sensitivity){
-                var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
-                this.outputs[pixelID] = Math.max((this.range-xs) / this.range, this.outputs[pixelID]);
-              }
+    }
+    if(this.rot == R_RIGHT){
+      for(var xs = 0; xs <= this.range; xs++){
+        for(var ys = -this.width -xs; ys<=this.width +xs; ys++){
+          var xi = xs + x;
+          var yi = ys + y;
+          if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+            if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+            if(worldMap.map[xi][yi] == this.sensitivity){
+              var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
+              this.outputs[pixelID] = Math.max((this.range-xs) / this.range, this.outputs[pixelID]);
             }
           }
         }
       }
-      if(this.rot == R_LEFT){
-        for(var xs = 0; xs >= -this.range; xs--){
-          for(var ys = -this.width +xs; ys<=this.width -xs; ys++){
-            var xi = xs + x;
-            var yi = ys + y;
-            if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-              //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
-              if(worldMap.map[xi][yi] == this.sensitivity){
-                var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
-                this.outputs[pixelID] = Math.max((this.range+xs) / this.range, this.outputs[pixelID]);
-              }
+    }
+    if(this.rot == R_LEFT){
+      for(var xs = 0; xs >= -this.range; xs--){
+        for(var ys = -this.width +xs; ys<=this.width -xs; ys++){
+          var xi = xs + x;
+          var yi = ys + y;
+          if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+            if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+            if(worldMap.map[xi][yi] == this.sensitivity){
+              var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
+              this.outputs[pixelID] = Math.max((this.range+xs) / this.range, this.outputs[pixelID]);
             }
           }
         }
       }
-      
-      
+    }
+    
+    // Square the outputs
+    for(var n = 0; n < this.outputs.length ;n++){
+        this.outputs[n] = this.outputs[n] * this.outputs[n];
+    }
   },
   
   getScreenX: function(x,y,wx,wy,rot)
@@ -191,8 +194,8 @@ var Agent = function()
   this.rewardArray = [];
   this.brain = brainMaker();
   // Add sensors 
-  this.sensors.push(new SensorEye(0,0,R_UP,100,2));
-  this.sensors.push(new SensorEye(0,0,R_UP,100,1));
+  this.sensors.push(new SensorEye(0,-5,R_UP,100,2));
+  this.sensors.push(new SensorEye(0,-5,R_UP,100,1));
     
   /*OLD EYES
   for(var j = 2; j<3; j++){
@@ -214,13 +217,9 @@ var Agent = function()
   
   
   // Add mouths
-  for(var sx = -5; sx< 6; sx++){
-    this.mouths.push(new Mouth(sx, -5));
-    this.mouths.push(new Mouth(sx,  5));
-  }
-  for(var sy = -5; sy< 6; sy++){
-    this.mouths.push(new Mouth(  5, sy));
-    this.mouths.push(new Mouth( -5, sy));
+  var mouthOffset = getLineCoords(-5,-5,5,-5);
+  for(var m of mouthOffset){
+    this.mouths.push(new Mouth(m[0], m[1]));
   }
 }
 Agent.prototype = {
@@ -241,13 +240,15 @@ Agent.prototype = {
       //this.advance(1);
       //this.eat();
       this.turn(T_CW);
-      this.turn(T_CW);
+      this.advance(1);
+      this.turn(T_CCW);
     }
     if(action==4){
       //this.advance(1);
       //this.eat();
       this.turn(T_CCW);
-      this.turn(T_CCW);
+      this.advance(1);
+      this.turn(T_CW);
     }
     if(action==5){
       this.advance(1);
@@ -304,6 +305,41 @@ Agent.prototype = {
       }
       */
       this.sensors[i].rot = this.rot;
+      if(this.rot == R_UP){
+        this.sensors[i].x_offset = 0;
+        this.sensors[i].y_offset = -5;
+      }
+      if(this.rot == R_DOWN){
+        this.sensors[i].x_offset = 0;
+        this.sensors[i].y_offset = 5;
+      }
+      if(this.rot == R_LEFT){
+        this.sensors[i].x_offset = -5;
+        this.sensors[i].y_offset = 0;
+      }
+      if(this.rot == R_RIGHT){
+        this.sensors[i].x_offset = 5;
+        this.sensors[i].y_offset = 0;
+      }
+    }
+    
+    // Move Mouths to front of agent
+    var mouthOffset = [];
+    if(this.rot == R_UP){
+      mouthOffset = getLineCoords(-5,-5,5,-5);
+    }
+    if(this.rot == R_DOWN){
+      mouthOffset = getLineCoords(-5,5,5,5);
+    }
+    if(this.rot == R_LEFT){
+      mouthOffset = getLineCoords(-5,-5,-5,5);
+    }
+    if(this.rot == R_RIGHT){
+      mouthOffset = getLineCoords(5,-5,5,5);
+    }
+    for(var m=0; m < this.mouths.length;m++){
+      this.mouths[m].x_offset = mouthOffset[m][0];
+      this.mouths[m].y_offset = mouthOffset[m][1];
     }
     
     this.food -= this.turnCost;
@@ -381,7 +417,7 @@ Agent.prototype = {
   sense: function()
   {
     for(var s of this.sensors){
-      s.setOutput(this.x, this.y);
+      s.setOutput(this.x+s.x_offset, this.y+s.y_offset);
     }
     
     for(var j =0;j<this.sensors[0].outputs.length; j++){
@@ -448,9 +484,9 @@ Agent.prototype = {
     
     // Tweak rewards
     foodProximityReward = foodProximityReward/10;
-    wallProximityReward = wallProximityReward/2;
-    foodReward = Math.min(foodReward/100,0);
-    eatenReward = eatenReward;
+    wallProximityReward = wallProximityReward/10;
+    foodReward = foodReward/100;
+    eatenReward = eatenReward*5;
     movementReward = movementReward/10;
     
     // Store reward contributors
