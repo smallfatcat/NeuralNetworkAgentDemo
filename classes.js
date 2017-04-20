@@ -229,7 +229,7 @@ Agent.prototype = {
     this.lastAction = action;
     if(action==0){
       this.advance(1);
-      this.eat();
+      //this.eat();
     }
     if(action==1){
       this.turn(T_CW);
@@ -238,29 +238,35 @@ Agent.prototype = {
       this.turn(T_CCW);
     }
     if(action==3){
-      this.advance(1);
-      this.eat();
+      //this.advance(1);
+      //this.eat();
+      this.turn(T_CW);
       this.turn(T_CW);
     }
     if(action==4){
-      this.advance(1);
-      this.eat();
+      //this.advance(1);
+      //this.eat();
+      this.turn(T_CCW);
       this.turn(T_CCW);
     }
     if(action==5){
       this.advance(1);
-      this.eat();
+      //this.eat();
       this.advance(1);
-      this.eat();
+      //this.eat();
     }
     if(action==6){
       this.advance(1);
-      this.eat();
+      //this.eat();
       this.advance(1);
-      this.eat();
+      //this.eat();
       this.advance(1);
+      //this.eat();
+    }
+    if(action==7){
       this.eat();
     }
+    
   },
   
   turn: function(direction)
@@ -308,7 +314,13 @@ Agent.prototype = {
   {
     this.collided = false;
     if(this.rot==R_UP){
-      if(worldMap.map[this.x][this.y - speed] != 1){
+      var coll = false;
+      for(var u = -5; u < 6; u++ ){
+        if(worldMap.map[this.x+u][this.y - 6] == 1){
+          coll = true;
+        }
+      }
+      if(!coll){
         this.y -= speed;
       }
       else{
@@ -316,7 +328,13 @@ Agent.prototype = {
       }
     }
     if(this.rot==R_DOWN){
-      if(worldMap.map[this.x][this.y + speed] != 1){
+      var coll = false;
+      for(var u = -5; u < 6; u++ ){
+        if(worldMap.map[this.x+u][this.y + 6] == 1){
+          coll = true;
+        }
+      }
+      if(!coll){
         this.y += speed;
       }
       else{
@@ -324,7 +342,13 @@ Agent.prototype = {
       }
     }
     if(this.rot==R_LEFT){
-      if(worldMap.map[this.x - speed][this.y] != 1){
+      var coll = false;
+      for(var u = -5; u < 6; u++ ){
+        if(worldMap.map[this.x-6][this.y + u] == 1){
+          coll = true;
+        }
+      }
+      if(!coll){
         this.x -= speed;
       }
       else{
@@ -332,7 +356,13 @@ Agent.prototype = {
       }
     }
     if(this.rot==R_RIGHT){
-      if(worldMap.map[this.x + speed][this.y] != 1){
+      var coll = false;
+      for(var u = -5; u < 6; u++ ){
+        if(worldMap.map[this.x+6][this.y + u] == 1){
+          coll = true;
+        }
+      }
+      if(!coll){
         this.x += speed;
       }
       else{
@@ -421,7 +451,7 @@ Agent.prototype = {
     wallProximityReward = wallProximityReward/2;
     foodReward = Math.min(foodReward/100,0);
     eatenReward = eatenReward;
-    movementReward = movementReward/2;
+    movementReward = movementReward/10;
     
     // Store reward contributors
     this.rewardArray = [];

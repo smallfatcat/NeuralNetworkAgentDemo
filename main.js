@@ -58,7 +58,9 @@ var loopTimer;
 $(document).ready( start );
 
 function start() {
-  
+  MyAgent.brain.learning = false;
+  clockTick();
+  MyAgent.brain.learning = true;
   drawAll();
   loopTimer = setInterval(checkSimRunning, 10);
   
@@ -147,6 +149,10 @@ function checkSimRunning()
     clockTick();
     tickCompleted = true;
   }
+  if(!simRunning && tickCompleted){
+    MyAgent.sense();
+    MyAgent.calcReward();
+  }
      
   // Draw Everything
   drawAll();
@@ -195,7 +201,7 @@ function clockTick()
   
   for(var dAgent of DumbAgents){
     // Do DumbAgent action
-    var actionDumb = Math.floor( Math.random()*7);
+    var actionDumb = Math.floor( Math.random()*8);
     dAgent.doAction(actionDumb);
   }
 }
@@ -205,8 +211,8 @@ function clockTick()
 function brainMaker()
 {
   var num_inputs = 26; // 2 eyes, each sees 11 pixels color (wall, food proximity), 4 rotation
-  var num_actions = 7; // 3 possible actions agent can do
-  var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
+  var num_actions = 8; // 3 possible actions agent can do
+  var temporal_window = 3; // amount of temporal memory. 0 = agent lives in-the-moment :)
   var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
 
   // the value function network computes a value of taking any of the possible actions
@@ -216,11 +222,10 @@ function brainMaker()
   var layer_defs = [];
   layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
   layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
   layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
   layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
   layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
+  
   layer_defs.push({type:'regression', num_neurons:num_actions});
 
   // options for the Temporal Difference learner that trains the above net
@@ -235,7 +240,7 @@ function brainMaker()
   opt.learning_steps_total = 200000;
   opt.learning_steps_burnin = 3000;
   opt.epsilon_min = 0.05;
-  opt.epsilon_test_time = 0.01;
+  opt.epsilon_test_time = 0.05;
   opt.layer_defs = layer_defs;
   opt.tdtrainer_options = tdtrainer_options;
   var brain;

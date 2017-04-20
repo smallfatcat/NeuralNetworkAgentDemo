@@ -80,6 +80,7 @@ function drawCanvas()
   for(let l of MyAgent.brain.value_net.layers){
     x =  40;
     y += 10;
+    // draw each neuron
     if(l.out_act !=undefined){
       var k = 0;
       for(let w of l.out_act.w){
@@ -94,6 +95,7 @@ function drawCanvas()
         ctx.fill();
       }
     }
+    // draw each neuron if the net is not yet complete
     else{
       var k = 0;
       for(var w =0;w<l.out_depth;w++){
@@ -104,11 +106,44 @@ function drawCanvas()
         ctx.beginPath();
         ctx.arc(x,y,5,0,2*Math.PI);
         //var c = parseInt((w+1)/2*255);
-        ctx.fillStyle='rgb(128,200,128)';
+        ctx.fillStyle='rgb(128,128,128)';
         ctx.fill();
       }
     }
   }
+  var px = 50;
+  var py = 400;
+  var comp = ['','','','','','','','','','',''];
+  for(let e of MyAgent.sensors){
+    var i=0;
+    for(let p of e.outputs){
+      var c = parseInt(p*255);
+      if(e.sensitivity == 2){
+        if(p>0){
+          comp[i] = 'rgb(0,'+c+',0)';
+        }
+        ctx.fillStyle = 'rgb(0,'+c+',0)';
+      }
+      if(e.sensitivity == 1){
+        if(comp[i] === ''){
+          comp[i] = 'rgb('+c+',0,0)';
+        }
+        ctx.fillStyle='rgb('+c+',0,0)';
+      }
+      ctx.fillRect(px, py, 10, 10);
+      px += 10;
+      i++;
+    }
+    py += 10;
+    px = 50;
+  }
+  py += 10;
+  for(let e of comp){
+    ctx.fillStyle=  e;
+    ctx.fillRect(px, py, 10, 10);
+    px += 10;
+  }
+  
 }
 
 function drawWorld()
@@ -121,7 +156,7 @@ function drawWorld()
   // Draw MyAgent
   ctx.beginPath();
   ctx.fillStyle = 'rgb(255,64,64)';
-  ctx.fillRect(MyAgent.x-5, MyAgent.y-5, 10, 10);
+  ctx.fillRect(MyAgent.x-5, MyAgent.y-5, 11, 11);
   
   var p = 10;
   var cx = MyAgent.x;
@@ -151,7 +186,7 @@ function drawWorld()
     // Draw DumbAgent
     ctx.beginPath();
     ctx.fillStyle = 'rgb(64,255,64)';
-    ctx.fillRect(dAgent.x-5, dAgent.y-5, 10, 10);
+    ctx.fillRect(dAgent.x-5, dAgent.y-5, 11, 11);
     
     var p = 10;
     var cx = dAgent.x;
