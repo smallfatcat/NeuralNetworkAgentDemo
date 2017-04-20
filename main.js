@@ -300,20 +300,49 @@ function getLineCoords(x1,y1,x2,y2)
 {
   var lineCoords = [];
   if(x1==x2){
-    var miny = Math.min(y1,y2);
-    var maxy = Math.max(y1,y2);
-    for(var i = miny; i <= maxy; i++){
-      lineCoords.push([x1,i]);
+    if(y1<y2){
+      for(var i = y1; i <= y2; i++){
+        lineCoords.push([x1,i]);
+      }
+    }
+    else{
+      for(var i = y2; i >= y1; i--){
+        lineCoords.push([x1,i]);
+      }
     }
   }
   if(y1==y2){
-    var minx = Math.min(x1,x2);
-    var maxx = Math.max(x1,x2);
-    for(var i = minx; i <= maxx; i++){
-      lineCoords.push([i,y1]);
+    if(x1<x2){
+      for(var i = x1; i <= x2; i++){
+        lineCoords.push([i,y1]);
+      }
+    }
+    else{
+      for(var i = x2; i >= x1; i--){
+        lineCoords.push([i,y1]);
+      }
     }
   }
   return lineCoords;
+}
+
+function buildVisField(width,range)
+{
+  var visField = [];
+  var dist = 0;
+  var currentWidth = width;
+  var startx = (width-1)/2;
+  for(var d=0;d<=range;d++)
+    var line = getLineCoords(-startx,(d*-1)-1,startx,(d*-1)-1);
+    for(var m = 0; m < line.length; m++){
+      line[m].push(d);
+      // Check this works later
+      var pixel = Math.round(m/line.length);
+      line[m].push(pixel);
+    }
+    startx++;
+  }
+  
 }
 
 
