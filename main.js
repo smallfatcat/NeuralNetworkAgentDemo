@@ -24,6 +24,7 @@ var trainingRuns = 0;
 var testdata = [];
 var label = [];
 var runs = 0;
+var cycleTraining = false;
 var lastError = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 label.push(6);
 //var net = new convnetjs.Net();
@@ -145,6 +146,16 @@ function checkSimRunning()
     console.log('slowdown detected');
   }
   if(simRunning && tickCompleted){
+    if(cycleTraining){
+      if(runs%1000 == 0){
+        if(MyAgent.brain.learning){
+          MyAgent.brain.learning = false;
+        }
+        else{
+          MyAgent.brain.learning = true;
+        }
+      }
+    }
     tickCompleted = false;
     clockTick();
     tickCompleted = true;
@@ -266,9 +277,11 @@ function loadnet() {
 
 function startlearn() {
   MyAgent.brain.learning = true;
+  cycleTraining = false;
 }
 function stoplearn() {
   MyAgent.brain.learning = false;
+  cycleTraining = false;
 }
 function runsim() {
   simRunning = true;
@@ -276,6 +289,13 @@ function runsim() {
 function pausesim() {
   simRunning = false;
 }
-
+function cycletrain() {
+  if(cycleTraining){
+    cycleTraining = false;
+  }
+  else{
+    cycleTraining = true;
+  }
+}
 
 

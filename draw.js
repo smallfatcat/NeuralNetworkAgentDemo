@@ -15,10 +15,16 @@ function updateStatus(){
     statusTxt += 'Sim Paused - ';
   }
   if(MyAgent.brain.learning){
-    statusTxt += 'Training Active';
+    statusTxt += 'Training Active - ';
   }
   else{
-    statusTxt += 'Training Disabled';
+    statusTxt += 'Training Disabled - ';
+  }
+  if(cycleTraining){
+    statusTxt += 'Cycle Training On';
+  }
+  else{
+    statusTxt += 'Cycle Training Off';
   }
   
   $('#statusTxt').empty();
