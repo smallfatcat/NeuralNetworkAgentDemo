@@ -4,6 +4,7 @@ var World = function()
   this.height = 500;
   this.map = [];
   this.foodTotal = 0;
+  this.poison = 0;
   
   for (var h = 0; h < this.height ; h++){
     var y_row = [];
@@ -29,6 +30,32 @@ var SensorEye = function(x,y,rot,range, sensitivity)
 }
 SensorEye.prototype = {
   setOutput: function(x,y)
+  {
+    // set outputs to zero
+    for(var n = 0; n < this.outputs.length ;n++){
+      this.outputs[n] = 0;
+    }
+    var visField = visualFieldArray[this.rot];
+    for(var vis of visField){
+      // vis is [x,y,depth,pixel,distance]
+      var xi = vis[0] + x;
+      var yi = vis[1] + y;
+      if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+        //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+        if(worldMap.map[xi][yi] == this.sensitivity){
+          this.outputs[vis[3]] = Math.max(this.outputs[vis[3]], (this.range - vis[4]) / this.range );
+        }
+      }
+    }
+    // Square the outputs
+    for(var n = 0; n < this.outputs.length ;n++){
+        this.outputs[n] = this.outputs[n] * this.outputs[n];
+    }
+    
+   
+  },
+  
+  setOutput2: function(x,y)
   {
     //if(this.rot == R_UP){
     for(var n = 0; n < this.outputs.length ;n++){
@@ -174,6 +201,7 @@ var Mouth = function(x,y)
 {
   this.x_offset = x;
   this.y_offset = y;
+  this.output = 0;
 }
 
 var Agent = function()
@@ -185,6 +213,7 @@ var Agent = function()
   this.collided = false;
   this.reward = 0;
   this.food = 0;
+  this.poison = 0;
   this.justEaten = 0;
   this.travelled = 0;
   this.moveCost =0.005;
@@ -192,10 +221,13 @@ var Agent = function()
   this.sensors = [];
   this.mouths = [];
   this.rewardArray = [];
+  this.tasteOutput = 0;
+  this.tastePoison = 0;
   this.brain = brainMaker();
   // Add sensors 
   this.sensors.push(new SensorEye(0,-5,R_UP,100,2));
   this.sensors.push(new SensorEye(0,-5,R_UP,100,1));
+  this.sensors.push(new SensorEye(0,-5,R_UP,100,8));
     
   /*OLD EYES
   for(var j = 2; j<3; j++){
@@ -426,6 +458,27 @@ Agent.prototype = {
         this.sensors[0].outputs[j] = 0;
       }
     }
+    for(var j =0;j<this.sensors[2].outputs.length; j++){
+      // walls hide poison
+      if(this.sensors[1].outputs[j] > this.sensors[2].outputs[j]){
+        this.sensors[2].outputs[j] = 0;
+      }
+    }
+    
+    this.tasteOutput = 0;
+    this.tastePoison = 0;
+    for(var m of this.mouths){
+      if(worldMap.map[this.x+m.x_offset][this.y+m.y_offset] == 2){
+        m.output += 1;
+        this.tasteOutput +=1;
+      }
+      if(worldMap.map[this.x+m.x_offset][this.y+m.y_offset] == 2){
+        m.output += 1;
+        this.tastePoison +=1;
+      }
+    }
+    this.tasteOutput = this.tasteOutput / this.mouths.length;
+    this.tastePoison = this.tastePoison / this.mouths.length;
     
     /*
     for(var i =0;i<this.sensors.length-1; i+=2){
@@ -441,13 +494,27 @@ Agent.prototype = {
   
   eat: function()
   {
+    var poisoned = false;
+    var foodEaten = 0;
     for(var m of this.mouths){
       if(worldMap.map[this.x+m.x_offset][this.y+m.y_offset] == 2){
         worldMap.map[this.x+m.x_offset][this.y+m.y_offset] = 0;
-        this.food += 1;
+        foodEaten += 1;
         this.justEaten += 1;
         worldMap.foodTotal--;
       }
+      // poison
+      if(worldMap.map[this.x+m.x_offset][this.y+m.y_offset] == 8){
+        poisoned = true;
+        this.poison += 1;
+      }
+    }
+    if(poisoned){
+      this.food -= 2;
+      this.justEaten = 0;
+    }
+    else{
+      this.food += foodEaten;
     }
   },
   

@@ -42,6 +42,7 @@ function updateAgentReadout()
   data.push([ 'Reward',               MyAgent.reward.toFixed(3)     ]);
   data.push([ '', 'AI Agent', 'DumbAgent1', 'DumbAgent2']);
   data.push([ 'Food',              MyAgent.food.toFixed(3) , DumbAgents[0].food.toFixed(3), DumbAgents[1].food.toFixed(3) ]);
+  data.push([ 'Poison',              MyAgent.poison.toFixed(3) , DumbAgents[0].poison.toFixed(3), DumbAgents[1].poison.toFixed(3) ]);
   data.push([ 'Travelled',         MyAgent.travelled, DumbAgents[0].travelled, DumbAgents[1].travelled ]);
   data.push([ 'Runs',                 runs ]);
   data.push([ 'Food',                 worldMap.foodTotal ]);
@@ -121,24 +122,24 @@ function drawCanvas()
       }
     }
   }
+  
+  // Draw Visual Cortex
+  var outputArray = [];
   var px = 50;
   var py = 400;
-  var comp = ['','','','','','','','','','',''];
-  for(let e of MyAgent.sensors){
+  for(var eye of MyAgent.sensors){
+    outputArray.push(eye.outputs);
     var i=0;
-    for(let p of e.outputs){
+    for(var p of eye.outputs){
       var c = parseInt(p*255);
-      if(e.sensitivity == 2){
-        if(p>0){
-          comp[i] = 'rgb(0,'+c+',0)';
-        }
+      if(eye.sensitivity == 2){
         ctx.fillStyle = 'rgb(0,'+c+',0)';
       }
-      if(e.sensitivity == 1){
-        if(comp[i] === ''){
-          comp[i] = 'rgb('+c+',0,0)';
-        }
+      if(eye.sensitivity == 1){
         ctx.fillStyle='rgb('+c+',0,0)';
+      }
+      if(eye.sensitivity == 8){
+        ctx.fillStyle='rgb('+c+','+c+',0)';
       }
       ctx.fillRect(px, py, 10, 10);
       px += 10;
@@ -147,12 +148,21 @@ function drawCanvas()
     py += 10;
     px = 50;
   }
+  // Composite Cortex
   py += 10;
-  for(let e of comp){
-    ctx.fillStyle=  e;
+  for(var p=0;p<outputArray[0].length;p++){
+    if(outputArray[0][p]>outputArray[1][p]){
+      var c = parseInt(outputArray[0][p]*255);
+      ctx.fillStyle = 'rgb(0,'+c+',0)';
+    }
+    else{
+      var c = parseInt(outputArray[1][p]*255);
+      ctx.fillStyle='rgb('+c+',0,0)';
+    }
     ctx.fillRect(px, py, 10, 10);
     px += 10;
   }
+  
   
 }
 
@@ -167,16 +177,24 @@ function drawWorld()
   for(var wx=0; wx <500; wx++){
     for(var wy=0; wy <500; wy++){
       // Draw Walls
-      if(worldMap.map[wx][wy] == 1){
+      var contents = worldMap.map[wx][wy];
+      if(contents == 1){
         ctx.fillStyle = 'rgb(255,64,64)';
         ctx.fillRect(wx, wy, 1, 1);
       }
       // Draw food
-      if(worldMap.map[wx][wy] == 2){
+      if(contents == 2){
         ctx.fillStyle = 'rgb(0,0,0)';
         ctx.fillRect(wx, wy, 1, 1);
       }
       
+      // Draw poison
+      if(contents == 8){
+        ctx.fillStyle = 'rgb(128,128,0)';
+        ctx.fillRect(wx, wy, 1, 1);
+      }
+      
+      /*
       // Draw visual field
       if(worldMap.map[wx][wy] == 6){
         ctx.fillStyle = 'rgb(230,230,255)';

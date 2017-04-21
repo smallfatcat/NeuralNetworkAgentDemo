@@ -56,6 +56,8 @@ var routeTimer;
 
 var loopTimer;
 
+var visualFieldArray = visFieldGen();
+
 $(document).ready( start );
 
 function start() {
@@ -110,6 +112,29 @@ function buildWorld()
       worldMap.foodTotal++;
     }
   }
+  
+  // Create poison
+  for (var i=0; i < 100; i++){
+    var x = Math.floor(Math.random()*398)+ 51;
+    var y = Math.floor(Math.random()*398)+ 51;
+    if(worldMap.map[x][y] != 2 && worldMap.map[x][y] != 1){
+      worldMap.map[x][y] = 8;
+      worldMap.poison++;
+    }
+    if(worldMap.map[x+1][y]  != 2 && worldMap.map[x+1][y] != 1){
+      worldMap.map[x+1][y]  = 8;
+      worldMap.poison++;
+    }
+    if(worldMap.map[x][y+1] != 2 && worldMap.map[x][y+1] != 1){
+      worldMap.map[x][y+1] = 8;
+      worldMap.poison++;
+    }
+    if(worldMap.map[x+1][y+1] != 2 && worldMap.map[x+1][y+1] != 1){
+      worldMap.map[x+1][y+1] = 8;
+      worldMap.poison++;
+    }
+  }
+  
 }
 
 function checkFood()
@@ -186,6 +211,9 @@ function clockTick()
   for(var pix of MyAgent.sensors[1].outputs){
     brainInputs.push(pix);
   }
+  for(var pix of MyAgent.sensors[2].outputs){
+    brainInputs.push(pix);
+  }
   /*OLD EYES
   for(var s of MyAgent.sensors){
     if(s.rot == MyAgent.rot){
@@ -200,6 +228,9 @@ function clockTick()
   brainInputs.push(MyAgent.rot === 1 ? 1:0);
   brainInputs.push(MyAgent.rot === 2 ? 1:0);
   brainInputs.push(MyAgent.rot === 3 ? 1:0);
+  brainInputs.push(MyAgent.tasteOutput);
+  brainInputs.push(MyAgent.tastePoison);
+  
   
   // Get action from brain
   var action = MyAgent.brain.forward(brainInputs);
@@ -221,7 +252,7 @@ function clockTick()
 // http://cs.stanford.edu/people/karpathy/convnetjs/
 function brainMaker()
 {
-  var num_inputs = 26; // 2 eyes, each sees 11 pixels color (wall, food proximity), 4 rotation
+  var num_inputs = 39; // 3 eyes, each sees 11 pixels color (wall, food proximity), 4 rotation, 2 taste
   var num_actions = 8; // 3 possible actions agent can do
   var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
   var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
@@ -232,8 +263,9 @@ function brainMaker()
   // to just insert simple relu hidden layers.
   var layer_defs = [];
   layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
-  layer_defs.push({type:'fc', num_neurons: 60, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 30, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 100, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
+  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
     
   layer_defs.push({type:'regression', num_neurons:num_actions});
 
@@ -306,7 +338,7 @@ function getLineCoords(x1,y1,x2,y2)
       }
     }
     else{
-      for(var i = y2; i >= y1; i--){
+      for(var i = y1; i >= y2; i--){
         lineCoords.push([x1,i]);
       }
     }
@@ -318,7 +350,7 @@ function getLineCoords(x1,y1,x2,y2)
       }
     }
     else{
-      for(var i = x2; i >= x1; i--){
+      for(var i = x1; i >= x2; i--){
         lineCoords.push([i,y1]);
       }
     }
@@ -326,23 +358,53 @@ function getLineCoords(x1,y1,x2,y2)
   return lineCoords;
 }
 
-function buildVisField(width,range)
+function buildVisField(width,range,rot)
 {
   var visField = [];
   var dist = 0;
   var currentWidth = width;
   var startx = (width-1)/2;
-  for(var d=0;d<=range;d++)
-    var line = getLineCoords(-startx,(d*-1)-1,startx,(d*-1)-1);
+  var pixelc = [];
+  for(var depth=0;depth<=range;depth++){
+    var line = [];
+    if(rot == R_UP){
+      line = getLineCoords(-startx, (depth*-1)-1, startx, (depth*-1)-1);
+    }
+    if(rot == R_DOWN){
+      line = getLineCoords(startx, depth+1, -startx, depth+1);
+    }
+    if(rot == R_RIGHT){
+      line = getLineCoords(depth+1, -startx, depth+1, startx);
+    }
+    if(rot == R_LEFT){
+      line = getLineCoords((depth*-1)-1, startx, (depth*-1)-1, -startx);
+    }
+    if(depth ==0){
+        pixelc = line;
+    }
     for(var m = 0; m < line.length; m++){
-      line[m].push(d);
+      line[m].push(depth);
       // Check this works later
-      var pixel = Math.round(m/line.length);
+      var pixel = Math.round(m/(line.length-1)*(width-1));
       line[m].push(pixel);
+      //calc distance
+      var distance = Math.sqrt(Math.pow( ( line[m][0] - pixelc[pixel][0] ), 2) + Math.pow(line[m][1] - pixelc[pixel][1], 2));
+      line[m].push(distance);
     }
     startx++;
+    visField = visField.concat(line);
   }
-  
+  return visField;
+}
+
+function visFieldGen()
+{
+  var visFieldArray = [];
+  visFieldArray.push(buildVisField(11,100,R_UP));
+  visFieldArray.push(buildVisField(11,100,R_RIGHT));
+  visFieldArray.push(buildVisField(11,100,R_DOWN));
+  visFieldArray.push(buildVisField(11,100,R_LEFT));
+  return visFieldArray;
 }
 
 
