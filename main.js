@@ -205,13 +205,13 @@ function clockTick()
   MyAgent.calcReward();
   // get inputs
   var brainInputs = [];
-  for(var pix of MyAgent.sensors[0].outputs){
+  for(var pix of MyAgent.sensors[0].outputs[0]){
     brainInputs.push(pix);
   }
-  for(var pix of MyAgent.sensors[1].outputs){
+  for(var pix of MyAgent.sensors[0].outputs[1]){
     brainInputs.push(pix);
   }
-  for(var pix of MyAgent.sensors[2].outputs){
+  for(var pix of MyAgent.sensors[0].outputs[2]){
     brainInputs.push(pix);
   }
   /*OLD EYES

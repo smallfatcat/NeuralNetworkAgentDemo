@@ -127,18 +127,20 @@ function drawCanvas()
   var outputArray = [];
   var px = 50;
   var py = 400;
-  for(var eye of MyAgent.sensors){
-    outputArray.push(eye.outputs);
+  var sensIdx = 0;
+  for(var outputs of MyAgent.sensors[0].outputs){
+    outputArray.push(outputs);
     var i=0;
-    for(var p of eye.outputs){
+    for(var p of outputs){
       var c = parseInt(p*255);
-      if(eye.sensitivity == 2){
+      var sensitivity = MyAgent.sensors[0].sensitivities[sensIdx];
+      if(sensitivity == 2){
         ctx.fillStyle = 'rgb(0,'+c+',0)';
       }
-      if(eye.sensitivity == 1){
+      if(sensitivity == 1){
         ctx.fillStyle='rgb('+c+',0,0)';
       }
-      if(eye.sensitivity == 8){
+      if(sensitivity == 8){
         ctx.fillStyle='rgb('+c+','+c+',0)';
       }
       ctx.fillRect(px, py, 10, 10);
@@ -147,6 +149,7 @@ function drawCanvas()
     }
     py += 10;
     px = 50;
+    sensIdx ++;
   }
   // Composite Cortex
   py += 10;
@@ -176,8 +179,9 @@ function drawWorld()
   // Draw Environment
   for(var wx=0; wx <500; wx++){
     for(var wy=0; wy <500; wy++){
-      // Draw Walls
+      // store contents for reuse in if statements, not doing so causes chrome to deoptimize this loop
       var contents = worldMap.map[wx][wy];
+      // Draw Walls
       if(contents == 1){
         ctx.fillStyle = 'rgb(255,64,64)';
         ctx.fillRect(wx, wy, 1, 1);

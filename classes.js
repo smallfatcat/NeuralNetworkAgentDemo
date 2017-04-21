@@ -15,117 +15,52 @@ var World = function()
   }
 }
 
-var SensorEye = function(x,y,rot,range, sensitivity)
+var SensorEye = function(x,y,rot,range, sensitivities)
 {
   this.x_offset = x;
   this.y_offset = y;
   this.rot = rot;
   this.range = range;
   this.outputs = [];
-  this.sensitivity = sensitivity;
+  this.sensitivities = sensitivities;
   this.width = 5;
-  for(var m=0;m<(this.width*2)+1;m++){
-    this.outputs.push(0);
+  for(var s of sensitivities){
+    var out = [];
+    for(var m=0;m<(this.width*2)+1;m++){
+      out.push(0);
+    }
+    this.outputs.push(out);
   }
 }
 SensorEye.prototype = {
   setOutput: function(x,y)
   {
     // set outputs to zero
-    for(var n = 0; n < this.outputs.length ;n++){
-      this.outputs[n] = 0;
-    }
-    var visField = visualFieldArray[this.rot];
-    for(var vis of visField){
-      // vis is [x,y,depth,pixel,distance]
-      var xi = vis[0] + x;
-      var yi = vis[1] + y;
-      if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-        //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
-        if(worldMap.map[xi][yi] == this.sensitivity){
-          this.outputs[vis[3]] = Math.max(this.outputs[vis[3]], (this.range - vis[4]) / this.range );
+    var index = 0;
+    for(var sensitivityoutputs of this.outputs){
+      for(var n = 0; n < sensitivityoutputs.length ;n++){
+        sensitivityoutputs[n] = 0;
+      }
+      var visField = visualFieldArray[this.rot];
+      for(var vis of visField){
+        // vis is [x,y,depth,pixel,distance]
+        var xi = vis[0] + x;
+        var yi = vis[1] + y;
+        if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+          //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+          if(worldMap.map[xi][yi] == this.sensitivities[index]){
+            sensitivityoutputs[vis[3]] = Math.max(sensitivityoutputs[vis[3]], (this.range - vis[4]) / this.range );
+          }
         }
       }
-    }
-    // Square the outputs
-    for(var n = 0; n < this.outputs.length ;n++){
-        this.outputs[n] = this.outputs[n] * this.outputs[n];
+      // Square the outputs
+      for(var n = 0; n < sensitivityoutputs.length ;n++){
+          sensitivityoutputs[n] = sensitivityoutputs[n] * sensitivityoutputs[n];
+      }
+      index++;
     }
     
    
-  },
-  
-  setOutput2: function(x,y)
-  {
-    //if(this.rot == R_UP){
-    for(var n = 0; n < this.outputs.length ;n++){
-      this.outputs[n] = 0;
-    }
-    if(this.rot == R_UP){
-      for(var ys = 0; ys >= -this.range; ys--){
-        for(var xs = -this.width +ys; xs<=this.width -ys; xs++){
-          var xi = xs + x;
-          var yi = ys + y;
-          if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-            if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
-            if(worldMap.map[xi][yi] == this.sensitivity){
-              var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
-              this.outputs[pixelID] = Math.max((this.range+ys) / this.range, this.outputs[pixelID]);
-            }
-          }
-        }
-      }
-    }
-    if(this.rot == R_DOWN){
-      for(var ys = 0; ys <= this.range; ys++){
-        for(var xs = -this.width -ys; xs<=this.width +ys; xs++){
-          var xi = xs + x;
-          var yi = ys + y;
-          if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-            if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
-            if(worldMap.map[xi][yi] == this.sensitivity){
-              var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
-              this.outputs[pixelID] = Math.max((this.range-ys) / this.range, this.outputs[pixelID]);
-            }
-          }
-        }
-      }
-    }
-    if(this.rot == R_RIGHT){
-      for(var xs = 0; xs <= this.range; xs++){
-        for(var ys = -this.width -xs; ys<=this.width +xs; ys++){
-          var xi = xs + x;
-          var yi = ys + y;
-          if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-            if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
-            if(worldMap.map[xi][yi] == this.sensitivity){
-              var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
-              this.outputs[pixelID] = Math.max((this.range-xs) / this.range, this.outputs[pixelID]);
-            }
-          }
-        }
-      }
-    }
-    if(this.rot == R_LEFT){
-      for(var xs = 0; xs >= -this.range; xs--){
-        for(var ys = -this.width +xs; ys<=this.width -xs; ys++){
-          var xi = xs + x;
-          var yi = ys + y;
-          if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-            if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
-            if(worldMap.map[xi][yi] == this.sensitivity){
-              var pixelID = this.getScreenX(x,y,xi,yi,this.rot);
-              this.outputs[pixelID] = Math.max((this.range+xs) / this.range, this.outputs[pixelID]);
-            }
-          }
-        }
-      }
-    }
-    
-    // Square the outputs
-    for(var n = 0; n < this.outputs.length ;n++){
-        this.outputs[n] = this.outputs[n] * this.outputs[n];
-    }
   },
   
   getScreenX: function(x,y,wx,wy,rot)
@@ -224,11 +159,10 @@ var Agent = function()
   this.tasteOutput = 0;
   this.tastePoison = 0;
   this.brain = brainMaker();
-  // Add sensors 
-  this.sensors.push(new SensorEye(0,-5,R_UP,100,2));
-  this.sensors.push(new SensorEye(0,-5,R_UP,100,1));
-  this.sensors.push(new SensorEye(0,-5,R_UP,100,8));
-    
+  // Add sensors
+  var sensitivities = [2,1,8];
+  this.sensors.push(new SensorEye(0,-5,R_UP,100,sensitivities));
+      
   /*OLD EYES
   for(var j = 2; j<3; j++){
     for(var sx = -5; sx< 6; sx++){
@@ -452,16 +386,16 @@ Agent.prototype = {
       s.setOutput(this.x+s.x_offset, this.y+s.y_offset);
     }
     
-    for(var j =0;j<this.sensors[0].outputs.length; j++){
+    for(var j =0;j<this.sensors[0].outputs[0].length; j++){
       // walls hide food
-      if(this.sensors[1].outputs[j] > this.sensors[0].outputs[j]){
-        this.sensors[0].outputs[j] = 0;
+      if(this.sensors[0].outputs[1][j] > this.sensors[0].outputs[0][j]){
+        this.sensors[0].outputs[0][j] = 0;
       }
     }
-    for(var j =0;j<this.sensors[2].outputs.length; j++){
+    for(var j =0;j<this.sensors[0].outputs[2].length; j++){
       // walls hide poison
-      if(this.sensors[1].outputs[j] > this.sensors[2].outputs[j]){
-        this.sensors[2].outputs[j] = 0;
+      if(this.sensors[0].outputs[1][j] > this.sensors[0].outputs[2][j]){
+        this.sensors[0].outputs[2][j] = 0;
       }
     }
     
@@ -521,19 +455,19 @@ Agent.prototype = {
   calcReward: function()
   {
     var foodProximityReward = 0;
-    for(var s of this.sensors[0].outputs){
-      if(this.sensors[0].sensitivity == 2){
+    for(var s of this.sensors[0].outputs[0]){
+      if(this.sensors[0].sensitivities[0] == 2){
         foodProximityReward += s;
       }
     }
     var wallProximityReward = 0;
     
-    for(var s of this.sensors[1].outputs){
-      if(this.sensors[1].sensitivity == 1){
+    for(var s of this.sensors[0].outputs[1]){
+      if(this.sensors[0].sensitivities[1] == 1){
         wallProximityReward += s;
       }
     }
-    wallProximityReward = wallProximityReward / this.sensors[1].outputs.length
+    wallProximityReward = wallProximityReward / this.sensors[0].outputs[1].length
         
     var foodReward = Math.max(this.food/20,0);
     var eatenReward = this.justEaten;
