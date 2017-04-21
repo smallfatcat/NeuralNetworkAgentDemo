@@ -36,29 +36,36 @@ SensorEye.prototype = {
   setOutput: function(x,y)
   {
     // set outputs to zero
-    var index = 0;
+    
     for(var sensitivityoutputs of this.outputs){
+      // Set outputs to zero
       for(var n = 0; n < sensitivityoutputs.length ;n++){
         sensitivityoutputs[n] = 0;
       }
-      var visField = visualFieldArray[this.rot];
-      for(var vis of visField){
-        // vis is [x,y,depth,pixel,distance]
-        var xi = vis[0] + x;
-        var yi = vis[1] + y;
-        if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
-          //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+    }
+    // Get visfield for this rotation
+    var visField = visualFieldArray[this.rot];
+    for(var vis of visField){
+      // vis is [x,y,depth,pixel,distance]
+      var xi = vis[0] + x;
+      var yi = vis[1] + y;
+      if( yi > -1 && yi < 500 && xi > -1 && xi < 500) {
+        //if(worldMap.map[xi][yi] == 0){worldMap.map[xi][yi] = 6};
+        for(var index = 0; index < this.sensitivities.length;index++){
           if(worldMap.map[xi][yi] == this.sensitivities[index]){
-            sensitivityoutputs[vis[3]] = Math.max(sensitivityoutputs[vis[3]], (this.range - vis[4]) / this.range );
+            this.outputs[index][vis[3]] = Math.max(this.outputs[index][vis[3]], (this.range - vis[4]) / this.range );
           }
         }
       }
-      // Square the outputs
-      for(var n = 0; n < sensitivityoutputs.length ;n++){
-          sensitivityoutputs[n] = sensitivityoutputs[n] * sensitivityoutputs[n];
-      }
-      index++;
     }
+    // Square the outputs
+    for(var sensitivityoutputs of this.outputs){
+      for(var n = 0; n < sensitivityoutputs.length ;n++){
+        sensitivityoutputs[n] = sensitivityoutputs[n] * sensitivityoutputs[n];
+      }
+    }
+    
+    
     
    
   },
