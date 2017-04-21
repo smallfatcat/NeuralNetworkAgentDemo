@@ -168,7 +168,7 @@ var Agent = function()
   this.brain = brainMaker();
   // Add sensors
   var sensitivities = [2,1,8];
-  this.sensors.push(new SensorEye(0,-5,R_UP,100,sensitivities));
+  this.sensors.push(new SensorEye(0,-5,R_UP,200,sensitivities));
       
   /*OLD EYES
   for(var j = 2; j<3; j++){
@@ -190,7 +190,7 @@ var Agent = function()
   
   
   // Add mouths
-  var mouthOffset = getLineCoords(-5,-5,5,-5);
+  var mouthOffset = getLineCoords(-5,-6,5,-6);
   for(var m of mouthOffset){
     this.mouths.push(new Mouth(m[0], m[1]));
   }
@@ -299,16 +299,16 @@ Agent.prototype = {
     // Move Mouths to front of agent
     var mouthOffset = [];
     if(this.rot == R_UP){
-      mouthOffset = getLineCoords(-5,-5,5,-5);
+      mouthOffset = getLineCoords(-5,-6,5,-6);
     }
     if(this.rot == R_DOWN){
-      mouthOffset = getLineCoords(-5,5,5,5);
+      mouthOffset = getLineCoords(-5,6,5,6);
     }
     if(this.rot == R_LEFT){
-      mouthOffset = getLineCoords(-5,-5,-5,5);
+      mouthOffset = getLineCoords(-6,-5,-6,5);
     }
     if(this.rot == R_RIGHT){
-      mouthOffset = getLineCoords(5,-5,5,5);
+      mouthOffset = getLineCoords(6,-5,6,5);
     }
     for(var m=0; m < this.mouths.length;m++){
       this.mouths[m].x_offset = mouthOffset[m][0];
@@ -413,7 +413,7 @@ Agent.prototype = {
         m.output += 1;
         this.tasteOutput +=1;
       }
-      if(worldMap.map[this.x+m.x_offset][this.y+m.y_offset] == 2){
+      if(worldMap.map[this.x+m.x_offset][this.y+m.y_offset] == 8){
         m.output += 1;
         this.tastePoison +=1;
       }
@@ -461,11 +461,15 @@ Agent.prototype = {
   
   calcReward: function()
   {
+    // multiply each pixel output by a factor to prefer centre vision
+    var peripheralMultiplier = [0.1,0.2,0.4,0.6,0.8,1,0.8,0.6,0.4,0.2,0.1];
     var foodProximityReward = 0;
+    var pixIdx = 0;
     for(var s of this.sensors[0].outputs[0]){
       if(this.sensors[0].sensitivities[0] == 2){
-        foodProximityReward += s;
+        foodProximityReward += s*peripheralMultiplier[pixIdx];
       }
+      pixIdx++;
     }
     var wallProximityReward = 0;
     
@@ -489,13 +493,18 @@ Agent.prototype = {
         movementReward =  1; 
       }
     }
+    var eatAttemptReward = 0;
+    if(this.lastAction == 7 ){
+      eatAttemptReward = 1;
+    }
     
     // Tweak rewards
-    foodProximityReward = foodProximityReward/10;
-    wallProximityReward = wallProximityReward/10;
+    foodProximityReward = foodProximityReward/4;
+    wallProximityReward = wallProximityReward/4;
     foodReward = foodReward/100;
-    eatenReward = eatenReward*5;
-    movementReward = movementReward/10;
+    eatenReward = eatenReward/2;
+    movementReward = movementReward/4;
+    eatAttemptReward = eatAttemptReward/2;
     
     // Store reward contributors
     this.rewardArray = [];
@@ -505,7 +514,7 @@ Agent.prototype = {
     this.rewardArray.push(['eatenReward',eatenReward]);
     this.rewardArray.push(['movementReward',movementReward]);
     
-    this.reward = foodProximityReward + foodReward + eatenReward + movementReward - wallProximityReward;
+    this.reward = foodProximityReward + foodReward + eatenReward + movementReward - wallProximityReward - eatAttemptReward;
     this.reward = Math.max(this.reward,0);
   }
 }

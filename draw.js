@@ -1,5 +1,5 @@
 function drawAll() {
-  drawCanvas();
+  drawNeurons();
   drawWorld();
   // Update Agent readout
   updateStatus();
@@ -39,6 +39,8 @@ function updateAgentReadout()
   for(var rc of MyAgent.rewardArray){
     data.push([ rc[0], rc[1].toFixed(3) ]);
   }
+  data.push([ 'Frame Time',               frameTime     ]);
+  data.push([ 'FPS',               (1000/frameTime).toFixed(1)     ]);
   data.push([ 'Reward',               MyAgent.reward.toFixed(3)     ]);
   data.push([ '', 'AI Agent', 'DumbAgent1', 'DumbAgent2']);
   data.push([ 'Food',              MyAgent.food.toFixed(3) , DumbAgents[0].food.toFixed(3), DumbAgents[1].food.toFixed(3) ]);
@@ -72,7 +74,7 @@ function simpleTable(data)
   return outTxt;
 }
 
-function drawCanvas()
+function drawNeurons()
 {
   var canvas = document.getElementById("mainCanvas");
   var ctx = canvas.getContext("2d");
@@ -89,7 +91,7 @@ function drawCanvas()
     y += 10;
     ctx.font = "8px Arial";
     ctx.fillStyle='rgb(255,255,255)';
-    ctx.fillText(l.layer_type.toUpperCase(),10,y+3);
+    ctx.fillText(l.layer_type.toUpperCase() + ' ('+l.out_depth+ ')',10,y+3);
     // draw each neuron
     if(l.out_act !=undefined){
       
@@ -125,10 +127,15 @@ function drawCanvas()
   
   // Draw Visual Cortex
   var outputArray = [];
-  var px = 50;
+  var px = 70;
   var py = 400;
+  ctx.fillStyle='rgb(255,255,255)';
+  ctx.fillText('VISUAL FIELD',10,py-20);
   var sensIdx = 0;
+  var sType = ['FOOD','WALL','POISON'];
   for(var outputs of MyAgent.sensors[0].outputs){
+    ctx.fillStyle='rgb(255,255,255)';
+    ctx.fillText(sType[sensIdx],10,py+9);
     outputArray.push(outputs);
     var i=0;
     for(var p of outputs){
@@ -148,11 +155,13 @@ function drawCanvas()
       i++;
     }
     py += 10;
-    px = 50;
+    px = 70;
     sensIdx ++;
   }
   // Composite Cortex
   py += 10;
+  ctx.fillStyle='rgb(255,255,255)';
+  ctx.fillText('COMPOSITE',10,py+9);
   for(var p=0;p<outputArray[0].length;p++){
     if(outputArray[0][p]>outputArray[1][p]){
       var c = parseInt(outputArray[0][p]*255);
@@ -165,6 +174,23 @@ function drawCanvas()
     ctx.fillRect(px, py, 10, 10);
     px += 10;
   }
+  
+  // Draw taste outputs
+  var tx = 50;
+  var ty = 300;
+  var length = MyAgent.tasteOutput*100;
+  ctx.fillStyle='rgb(0,255,0)';
+  ctx.fillRect(tx, ty, length, 10);
+  ty += 10;
+  var length = MyAgent.tastePoison*100;
+  ctx.fillStyle='rgb(255,255,0)';
+  ctx.fillRect(tx, ty, length, 10);
+  
+  // Draw reward
+  ty += 20;
+  var length = MyAgent.reward*100;
+  ctx.fillStyle='rgb(0,0,0)';
+  ctx.fillRect(tx, ty, length, 10);
   
   
 }
@@ -188,13 +214,13 @@ function drawWorld()
       }
       // Draw food
       if(contents == 2){
-        ctx.fillStyle = 'rgb(0,0,0)';
+        ctx.fillStyle = 'rgb(0,128,0)';
         ctx.fillRect(wx, wy, 1, 1);
       }
       
       // Draw poison
       if(contents == 8){
-        ctx.fillStyle = 'rgb(128,128,0)';
+        ctx.fillStyle = 'rgb(200,200,0)';
         ctx.fillRect(wx, wy, 1, 1);
       }
       

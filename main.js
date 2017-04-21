@@ -19,12 +19,17 @@ const R_LEFT  = 3;
 const T_CW    = 0;
 const T_CCW   = 1;
 
+var frameTime = 0;
+
+var numberActions = 8;
+var numberActionsLabel = [ 'A', 'CW', 'CCW', 'CWACCW', 'CCWACW', 'AA', 'AAA', 'E' ]
+
 var tickCompleted = true;
 var trainingRuns = 0;
 var testdata = [];
 var label = [];
 var runs = 0;
-var cycleTraining = true;
+var cycleTraining = false;
 var lastError = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 label.push(6);
 //var net = new convnetjs.Net();
@@ -58,12 +63,15 @@ var loopTimer;
 
 var visualFieldArray = visFieldGen();
 
+
+
 $(document).ready( start );
 
 function start() {
   //MyAgent.brain.learning = false;
   //clockTick();
   //MyAgent.brain.learning = true;
+  buildActionButtons();
   drawAll();
   loopTimer = setInterval(checkSimRunning, 10);
   
@@ -90,7 +98,34 @@ function buildWorld()
     worldMap.map[250][i]  = 1;
   }
   
+  // Create food block
+  for(var i=0; i < 25; i++){
+    var x = Math.floor(Math.random()*398)+ 51;
+    var y = Math.floor(Math.random()*398)+ 51;
+    for(var x2 = 0;x2<10;x2++){
+      for(var y2 = 0;y2<10;y2++){
+        if(worldMap.map[x+x2][y+y2] != 2 && worldMap.map[x+x2][y+y2] != 1){
+          worldMap.map[x+x2][y+y2] = 2;
+          worldMap.foodTotal++;
+        }
+      }
+    }
+  }
   
+  // Create poison block
+  for(var i=0; i < 25; i++){
+    var x = Math.floor(Math.random()*398)+ 51;
+    var y = Math.floor(Math.random()*398)+ 51;
+    for(var x2 = 0;x2<5;x2++){
+      for(var y2 = 0;y2<5;y2++){
+        if(worldMap.map[x+x2][y+y2] != 2 && worldMap.map[x+x2][y+y2] != 1){
+          worldMap.map[x+x2][y+y2] = 8;
+          worldMap.foodTotal++;
+        }
+      }
+    }
+  }
+  /*
   // Create food
   for (var i=0; i < 500; i++){
     var x = Math.floor(Math.random()*398)+ 51;
@@ -112,7 +147,8 @@ function buildWorld()
       worldMap.foodTotal++;
     }
   }
-  
+  */
+  /*
   // Create poison
   for (var i=0; i < 100; i++){
     var x = Math.floor(Math.random()*398)+ 51;
@@ -134,6 +170,7 @@ function buildWorld()
       worldMap.poison++;
     }
   }
+  */
   
 }
 
@@ -167,6 +204,7 @@ function checkFood()
   
 function checkSimRunning()
 {
+  var startTime = Date.now();
   if(!tickCompleted){
     console.log('slowdown detected');
   }
@@ -186,12 +224,14 @@ function checkSimRunning()
     tickCompleted = true;
   }
   if(!simRunning && tickCompleted){
-    MyAgent.sense();
-    MyAgent.calcReward();
+    //MyAgent.sense();
+    //MyAgent.calcReward();
   }
      
   // Draw Everything
   drawAll();
+  
+  frameTime = Date.now() - startTime;
   
 }
 
@@ -200,9 +240,8 @@ function clockTick()
   runs++;
   checkFood();
   // Calculate sensor readings
-  MyAgent.sense();
-  // Calculate rewards
-  MyAgent.calcReward();
+  //MyAgent.sense();
+  
   // get inputs
   var brainInputs = [];
   for(var pix of MyAgent.sensors[0].outputs[0]){
@@ -238,6 +277,11 @@ function clockTick()
   // Do brain action
   MyAgent.doAction(action);
   
+  // Calculate sensor readings
+  MyAgent.sense();
+  // Calculate rewards
+  MyAgent.calcReward();
+  
   // Train brain with reward
   MyAgent.brain.backward(MyAgent.reward);
   
@@ -264,9 +308,8 @@ function brainMaker()
   var layer_defs = [];
   layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
   layer_defs.push({type:'fc', num_neurons: 100, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
-    
+  layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+      
   layer_defs.push({type:'regression', num_neurons:num_actions});
 
   // options for the Temporal Difference learner that trains the above net
@@ -278,7 +321,7 @@ function brainMaker()
   opt.experience_size = 30000;
   opt.start_learn_threshold = 1000;
   opt.gamma = 0.7;
-  opt.learning_steps_total = 200000;
+  opt.learning_steps_total = 30000;
   opt.learning_steps_burnin = 3000;
   opt.epsilon_min = 0.05;
   opt.epsilon_test_time = 0.05;
@@ -326,6 +369,30 @@ function cycletrain() {
   else{
     cycleTraining = true;
   }
+}
+function butAction(action)
+{
+  if(!simRunning){
+    // Do action
+    MyAgent.doAction(action);
+    
+    // Calculate sensor readings
+    MyAgent.sense();
+    // Calculate rewards
+    MyAgent.calcReward();
+  }
+  console.log(action);
+}
+
+
+function buildActionButtons()
+{
+  var buttonTxt = '';
+  for(var i =0;i<numberActions;i++){
+    buttonTxt += '<button id="action'+i+'" class="ui-button ui-widget ui-corner-all my-button" onclick="butAction( '+i+' )">'+numberActionsLabel[i]+'</button>';
+  }
+  $('#controlButtons').empty();
+  $('#controlButtons').append(buttonTxt);
 }
 
 function getLineCoords(x1,y1,x2,y2)
@@ -400,10 +467,10 @@ function buildVisField(width,range,rot)
 function visFieldGen()
 {
   var visFieldArray = [];
-  visFieldArray.push(buildVisField(11,100,R_UP));
-  visFieldArray.push(buildVisField(11,100,R_RIGHT));
-  visFieldArray.push(buildVisField(11,100,R_DOWN));
-  visFieldArray.push(buildVisField(11,100,R_LEFT));
+  visFieldArray.push(buildVisField(11,200,R_UP));
+  visFieldArray.push(buildVisField(11,200,R_RIGHT));
+  visFieldArray.push(buildVisField(11,200,R_DOWN));
+  visFieldArray.push(buildVisField(11,200,R_LEFT));
   return visFieldArray;
 }
 
