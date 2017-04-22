@@ -7,7 +7,7 @@ function drawAll() {
 }
 
 function updateStatus(){
-  var statusTxt = ''
+  var statusTxt = '';
   if(simRunning){
     statusTxt += 'Sim Running - ';
   }
@@ -27,13 +27,15 @@ function updateStatus(){
     statusTxt += 'Cycle Training Off';
   }
   
-  $('#statusTxt').empty();
-  $('#statusTxt').append(statusTxt);
+  //$('#statusTxt').empty();
+  //$('#statusTxt').append(statusTxt);
+  
+  document.getElementById('statusTxt').innerHTML  = statusTxt;
 }
 
 function updateAgentReadout()
 {
-  $('#agentDiv').empty();
+  //$('#agentDiv').empty();
    
   var data = [];
   for(var rc of MyAgent.rewardArray){
@@ -56,7 +58,8 @@ function updateAgentReadout()
   data.push([ 'average Q-learning loss', MyAgent.brain.average_loss_window.get_average().toFixed(3) ]);
   data.push([ 'smooth-ish reward',       MyAgent.brain.average_reward_window.get_average().toFixed(3) ]);
   var agentTxt = simpleTable(data);
-  $('#agentDiv').append(agentTxt);
+  //$('#agentDiv').append(agentTxt);
+  document.getElementById('agentDiv').innerHTML  = agentTxt;
 }
 
 function simpleTable(data)
@@ -243,7 +246,8 @@ function drawWorld()
   }
   
     
-  for(var dAgent of DumbAgents){
+  for(var i=0;i<DumbAgents.length;i++){
+    var dAgent = DumbAgents[i];
     // Draw DumbAgent
     ctx.beginPath();
     ctx.fillStyle = 'rgb(64,255,64)';
@@ -283,19 +287,20 @@ function drawWorld()
   var cx = MyAgent.x;
   var cy = MyAgent.y;
   ctx.beginPath();
-  if(MyAgent.rot == 3){
+  var rot = MyAgent.rot;
+  if(rot == 3){
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx-p, cy);
   }
-  if(MyAgent.rot == 1){
+  if(rot == 1){
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx+p, cy);
   }
-  if(MyAgent.rot == 0){
+  if(rot == 0){
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx, cy-p);
   }
-  if(MyAgent.rot == 2){
+  if(rot == 2){
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx, cy+p);
   }
