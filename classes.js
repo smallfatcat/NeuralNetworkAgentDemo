@@ -171,29 +171,18 @@ Agent.prototype = {
       this.food -= this.turnCost;
     }
     if(action==3){
-      this.turn(T_CW);
-      this.advance(1);
       this.turn(T_CCW);
+      this.advance(1);
+      this.turn(T_CW);
       this.food -= this.moveCost;
     }
     if(action==4){
-      this.turn(T_CCW);
-      this.advance(1);
       this.turn(T_CW);
+      this.advance(1);
+      this.turn(T_CCW);
       this.food -= this.moveCost;
     }
     if(action==5){
-      this.advance(1);
-      this.advance(1);
-      this.food -= this.moveCost;
-    }
-    if(action==6){
-      this.advance(1);
-      this.advance(1);
-      this.advance(1);
-      this.food -= this.moveCost;
-    }
-    if(action==7){
       this.eat();
     }
     
@@ -397,18 +386,20 @@ Agent.prototype = {
     var pixIdx = 0;
     for(var s of this.sensors[0].outputs[0]){
       if(this.sensors[0].sensitivities[0] == 2){
-        foodProximityReward += s*peripheralMultiplier[pixIdx];
+        foodProximityReward = Math.max(s*peripheralMultiplier[pixIdx], foodProximityReward);
       }
       pixIdx++;
     }
-    var wallProximityReward = 0;
     
+    var wallProximityReward = 0;
+    pixIdx = 0;
     for(var s of this.sensors[0].outputs[1]){
       if(this.sensors[0].sensitivities[1] == 1){
-        wallProximityReward += s;
+        wallProximityReward = Math.max(s*peripheralMultiplier[pixIdx], wallProximityReward) ;
       }
+      pixIdx++;
     }
-    wallProximityReward = wallProximityReward / this.sensors[0].outputs[1].length
+    //wallProximityReward = wallProximityReward / this.sensors[0].outputs[1].length
         
     var foodReward = Math.max(this.food/20,0);
     var eatenReward = this.justEaten;
@@ -430,7 +421,7 @@ Agent.prototype = {
     
     // Tweak rewards
     foodProximityReward = foodProximityReward/4;
-    wallProximityReward = wallProximityReward/4;
+    wallProximityReward = wallProximityReward/5;
     foodReward = foodReward/100;
     eatenReward = eatenReward/2;
     movementReward = movementReward/4;

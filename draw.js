@@ -169,41 +169,44 @@ function drawNeurons()
     var food   = outputArray[0][p];
     var wall   = outputArray[1][p];
     var poison = outputArray[2][p];
-    var colorWall = 'rgb('+c+',0,0)';
-    var colorFood = 'rgb(0,'+c+',0)';
-    var colorPoison = 'rgb('+c+','+c+',0)';
-    
+        
     if( food > wall || poison > wall ){
       if(poison > food){
-        var c = parseInt(outputArray[1][p]*255);
-        ctx.fillStyle = colorPoison;
+        var c = parseInt(poison*255);
+        ctx.fillStyle = 'rgb('+c+','+c+',0)';
       }
       else{
-        var c = parseInt(outputArray[0][p]*255);
-        ctx.fillStyle = colorFood;
+        var c = parseInt(food*255);
+        ctx.fillStyle = 'rgb(0,'+c+',0)';
       }
     }
     else {
-      var c = parseInt(outputArray[1][p]*255);
-      ctx.fillStyle = colorWall;
+      var c = parseInt(wall*255);
+      ctx.fillStyle = 'rgb('+c+',0,0)';
     }
     ctx.fillRect(px, py, 10, 10);
     px += 10;
   }
   
   // Draw taste outputs
-  var tx = 50;
+  var tx = 70;
   var ty = 300;
+  ctx.fillStyle='rgb(255,255,255)';
+  ctx.fillText('FOOD',10,ty+9);
   var length = agents[0].tasteOutput*100;
   ctx.fillStyle='rgb(0,255,0)';
   ctx.fillRect(tx, ty, length, 10);
   ty += 10;
+  ctx.fillStyle='rgb(255,255,255)';
+  ctx.fillText('POISON',10,ty+9);
   var length = agents[0].tastePoison*100;
   ctx.fillStyle='rgb(255,255,0)';
   ctx.fillRect(tx, ty, length, 10);
   
   // Draw reward
   ty += 20;
+  ctx.fillStyle='rgb(255,255,255)';
+  ctx.fillText('REWARD',10,ty+9);
   var length = agents[0].reward*100;
   ctx.fillStyle='rgb(0,0,0)';
   ctx.fillRect(tx, ty, length, 10);

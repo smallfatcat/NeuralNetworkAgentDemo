@@ -23,8 +23,8 @@ const B_DUMB  = 1;
 
 var frameTime = 0;
 
-var numberActions = 8;
-var numberActionsLabel = [ 'A', 'CW', 'CCW', 'CWACCW', 'CCWACW', 'AA', 'AAA', 'E' ]
+var numberActions = 6;
+var numberActionsLabel = [ 'F', 'CW', 'CCW', 'L', 'R', 'E' ]
 
 var tickCompleted = true;
 var trainingRuns = 0;
@@ -103,7 +103,7 @@ function buildWorld()
   }
   
   // Create poison block
-  for(var i=0; i < 25; i++){
+  for(var i=0; i < 50; i++){
     var x = Math.floor(Math.random()*398)+ 51;
     var y = Math.floor(Math.random()*398)+ 51;
     for(var x2 = 0;x2<5;x2++){
@@ -168,25 +168,17 @@ function checkFood()
 {
   var foodTotal = worldMap.foodTotal;
   if(foodTotal < 1000){
-    // Create food
-    for (var i=0; i < 500; i++){
+    // Create food block
+    for(var i=0; i < 50; i++){
       var x = Math.floor(Math.random()*398)+ 51;
       var y = Math.floor(Math.random()*398)+ 51;
-      if(worldMap.map[x][y] != 2 && worldMap.map[x][y] != 1){
-        worldMap.map[x][y] = 2;
-        worldMap.foodTotal++;
-      }
-      if(worldMap.map[x+1][y]  != 2 && worldMap.map[x+1][y] != 1){
-        worldMap.map[x+1][y]  = 2;
-        worldMap.foodTotal++;
-      }
-      if(worldMap.map[x][y+1] != 2 && worldMap.map[x][y+1] != 1){
-        worldMap.map[x][y+1] = 2;
-        worldMap.foodTotal++;
-      }
-      if(worldMap.map[x+1][y+1] != 2 && worldMap.map[x+1][y+1] != 1){
-        worldMap.map[x+1][y+1] = 2;
-        worldMap.foodTotal++;
+      for(var x2 = 0;x2<10;x2++){
+        for(var y2 = 0;y2<10;y2++){
+          if(worldMap.map[x+x2][y+y2] != 2 && worldMap.map[x+x2][y+y2] != 1){
+            worldMap.map[x+x2][y+y2] = 2;
+            worldMap.foodTotal++;
+          }
+        }
       }
     }
   }
@@ -279,7 +271,7 @@ function clockTick()
 function brainMaker(brainType)
 {
   var num_inputs = 39; // 3 eyes, each sees 11 pixels color (wall, food proximity), 4 rotation, 2 taste
-  var num_actions = 8; // 3 possible actions agent can do
+  var num_actions = 6; // 3 possible actions agent can do
   var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
   if(brainType == B_SMART){
     
@@ -292,9 +284,7 @@ function brainMaker(brainType)
     var layer_defs = [];
     layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
     layer_defs.push({type:'fc', num_neurons: 100, activation:'relu'});
-    layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
-    layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
-    layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
+    layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
         
     layer_defs.push({type:'regression', num_neurons:num_actions});
 
