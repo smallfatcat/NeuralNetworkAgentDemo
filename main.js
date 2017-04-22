@@ -298,7 +298,7 @@ function brainMaker()
 {
   var num_inputs = 39; // 3 eyes, each sees 11 pixels color (wall, food proximity), 4 rotation, 2 taste
   var num_actions = 8; // 3 possible actions agent can do
-  var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
+  var temporal_window = 8; // amount of temporal memory. 0 = agent lives in-the-moment :)
   var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
 
   // the value function network computes a value of taking any of the possible actions
