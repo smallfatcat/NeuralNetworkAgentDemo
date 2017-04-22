@@ -19,6 +19,52 @@ function followWP(r){
   MyAgent.sense();
   drawWorld();
 }
+var Sensor = function(x,y,rot,range, sensitivity)
+{
+  this.x_offset = x;
+  this.y_offset = y;
+  this.rot = rot;
+  this.range = range;
+  this.output = 0;
+  this.sensitivity = sensitivity;
+}
+Sensor.prototype = {
+  setOutput: function(x,y)
+  {
+    this.output = 0;
+    for(var i = this.range; i > 0 ; i-- ){
+      if(this.rot == R_UP){
+          if(y+this.y_offset-i > -1){
+            if(worldMap.map[x+this.x_offset][y+this.y_offset-i] == this.sensitivity){
+              this.output = ( (this.range-i) + 1 ) / this.range;
+            }
+          }
+      }
+      if(this.rot == R_DOWN){
+          if(y+this.y_offset+i < worldMap.height){
+            if(worldMap.map[x+this.x_offset][y+this.y_offset+i] == this.sensitivity){
+              this.output = ( (this.range-i) + 1 ) / this.range;
+            }
+          }
+      }
+      if(this.rot == R_LEFT){
+          if(x+this.x_offset-i > -1){
+            if(worldMap.map[x+this.x_offset-i][y+this.y_offset] == this.sensitivity){
+              this.output = ( (this.range-i) + 1 ) / this.range;
+            }
+          }
+      }
+      if(this.rot == R_RIGHT){
+          if(x+this.x_offset+i < worldMap.width){
+            if(worldMap.map[x+this.x_offset+i][y+this.y_offset] == this.sensitivity){
+              this.output = ( (this.range-i) + 1 ) / this.range;
+            }
+          }
+      }
+    }
+    this.output *= this.output; // Square the output
+  }
+}
 
 function startOld() {
   /*

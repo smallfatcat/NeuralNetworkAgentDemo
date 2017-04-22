@@ -18,6 +18,8 @@ const R_DOWN  = 2;
 const R_LEFT  = 3;
 const T_CW    = 0;
 const T_CCW   = 1;
+const B_SMART = 0;
+const B_DUMB  = 1;
 
 var frameTime = 0;
 
@@ -42,20 +44,11 @@ var mapLabels  = ['empty','wall','food','poison','water','vis'];
 var worldMap = new World();
 buildWorld();
 
-var MyAgent = new Agent();
-MyAgent.x = 250;
-MyAgent.y = 250;
-
-var DumbAgents = [];
-var DumbAgent = new Agent();
-DumbAgent.x = 250;
-DumbAgent.y = 250;
-DumbAgents.push(DumbAgent);
-
-var DumbAgent2 = new Agent();
-DumbAgent2.x = 250;
-DumbAgent2.y = 250;
-DumbAgents.push(DumbAgent2);
+// Create Agents
+var agents = [];
+agents.push(new Agent(250,250,B_SMART));
+agents.push(new Agent(250,250,B_DUMB));
+agents.push(new Agent(250,250,B_DUMB));
 
 var routeTimer;
 
@@ -68,9 +61,6 @@ var visualFieldArray = visFieldGen();
 $(document).ready( start );
 
 function start() {
-  //MyAgent.brain.learning = false;
-  //clockTick();
-  //MyAgent.brain.learning = true;
   buildActionButtons();
   drawAll();
   loopTimer = setInterval(checkSimRunning, 10);
@@ -211,11 +201,13 @@ function checkSimRunning()
   if(simRunning && tickCompleted){
     if(cycleTraining){
       if(runs%100 == 0){
-        if(MyAgent.brain.learning){
-          MyAgent.brain.learning = false;
-        }
-        else{
-          MyAgent.brain.learning = true;
+        for(var agent of agents){
+          if(MyAgent.brain.learning){
+            agent.brain.learning = false;
+          }
+          else{
+            agent.brain.learning = true;
+          }
         }
       }
     }
@@ -241,98 +233,96 @@ function clockTick()
   checkFood();
   // Calculate sensor readings
   //MyAgent.sense();
-  
-  // get inputs
-  var brainInputs = [];
-  for(var pix of MyAgent.sensors[0].outputs[0]){
-    brainInputs.push(pix);
-  }
-  for(var pix of MyAgent.sensors[0].outputs[1]){
-    brainInputs.push(pix);
-  }
-  for(var pix of MyAgent.sensors[0].outputs[2]){
-    brainInputs.push(pix);
-  }
-  /*OLD EYES
-  for(var s of MyAgent.sensors){
-    if(s.rot == MyAgent.rot){
-      brainInputs.push(s.output);
+  for(var agent of agents){
+    // get inputs
+    var brainInputs = [];
+    if(agent.brainType == B_SMART){
+      for(var pix of agent.sensors[0].outputs[0]){
+        brainInputs.push(pix);
+      }
+      for(var pix of agent.sensors[0].outputs[1]){
+        brainInputs.push(pix);
+      }
+      for(var pix of agent.sensors[0].outputs[2]){
+        brainInputs.push(pix);
+      }
+      brainInputs.push(agent.rot === 0 ? 1:0);
+      brainInputs.push(agent.rot === 1 ? 1:0);
+      brainInputs.push(agent.rot === 2 ? 1:0);
+      brainInputs.push(agent.rot === 3 ? 1:0);
+      brainInputs.push(agent.tasteOutput);
+      brainInputs.push(agent.tastePoison);
     }
-    else{
-      brainInputs.push(s.output/4);
+    
+    
+    // Get action from brain
+    var action = agent.brain.forward(brainInputs);
+    
+    // Do brain action
+    agent.doAction(action);
+    
+    if(agent.brainType == B_SMART){
+      // Calculate sensor readings
+      agent.sense();
+      // Calculate rewards
+      agent.calcReward();
+      
+      // Train brain with reward
+      agent.brain.backward(agent.reward);
     }
   }
-  */
-  brainInputs.push(MyAgent.rot === 0 ? 1:0);
-  brainInputs.push(MyAgent.rot === 1 ? 1:0);
-  brainInputs.push(MyAgent.rot === 2 ? 1:0);
-  brainInputs.push(MyAgent.rot === 3 ? 1:0);
-  brainInputs.push(MyAgent.tasteOutput);
-  brainInputs.push(MyAgent.tastePoison);
   
-  
-  // Get action from brain
-  var action = MyAgent.brain.forward(brainInputs);
-  
-  // Do brain action
-  MyAgent.doAction(action);
-  
-  // Calculate sensor readings
-  MyAgent.sense();
-  // Calculate rewards
-  MyAgent.calcReward();
-  
-  // Train brain with reward
-  MyAgent.brain.backward(MyAgent.reward);
-  
-  for(var dAgent of DumbAgents){
-    // Do DumbAgent action
-    var actionDumb = Math.floor( Math.random()*8);
-    dAgent.doAction(actionDumb);
-  }
 }
 
 // Adapted from deepqlearn demo by @karpathy from 
 // http://cs.stanford.edu/people/karpathy/convnetjs/
-function brainMaker()
+function brainMaker(brainType)
 {
   var num_inputs = 39; // 3 eyes, each sees 11 pixels color (wall, food proximity), 4 rotation, 2 taste
   var num_actions = 8; // 3 possible actions agent can do
-  var temporal_window = 8; // amount of temporal memory. 0 = agent lives in-the-moment :)
-  var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
+  var temporal_window = 1; // amount of temporal memory. 0 = agent lives in-the-moment :)
+  if(brainType == B_SMART){
+    
+    var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
 
-  // the value function network computes a value of taking any of the possible actions
-  // given an input state. Here we specify one explicitly the hard way
-  // but user could also equivalently instead use opt.hidden_layer_sizes = [20,20]
-  // to just insert simple relu hidden layers.
-  var layer_defs = [];
-  layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
-  layer_defs.push({type:'fc', num_neurons: 100, activation:'relu'});
-  layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
-      
-  layer_defs.push({type:'regression', num_neurons:num_actions});
+    // the value function network computes a value of taking any of the possible actions
+    // given an input state. Here we specify one explicitly the hard way
+    // but user could also equivalently instead use opt.hidden_layer_sizes = [20,20]
+    // to just insert simple relu hidden layers.
+    var layer_defs = [];
+    layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
+    layer_defs.push({type:'fc', num_neurons: 100, activation:'relu'});
+    layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
+    layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
+    layer_defs.push({type:'fc', num_neurons: 20, activation:'relu'});
+        
+    layer_defs.push({type:'regression', num_neurons:num_actions});
 
-  // options for the Temporal Difference learner that trains the above net
-  // by backpropping the temporal difference learning rule.
-  var tdtrainer_options = {learning_rate:0.001, momentum:0.0, batch_size:64, l2_decay:0.01};
+    // options for the Temporal Difference learner that trains the above net
+    // by backpropping the temporal difference learning rule.
+    var tdtrainer_options = {learning_rate:0.001, momentum:0.0, batch_size:64, l2_decay:0.01};
 
-  var opt = {};
-  opt.temporal_window = temporal_window;
-  opt.experience_size = 30000;
-  opt.start_learn_threshold = 1000;
-  opt.gamma = 0.7;
-  opt.learning_steps_total = 30000;
-  opt.learning_steps_burnin = 3000;
-  opt.epsilon_min = 0.05;
-  opt.epsilon_test_time = 0.05;
-  opt.layer_defs = layer_defs;
-  opt.tdtrainer_options = tdtrainer_options;
-  var brain;
-  return brain = new deepqlearn.Brain(num_inputs, num_actions, opt); // woohoo
+    var opt = {};
+    opt.temporal_window = temporal_window;
+    opt.experience_size = 30000;
+    opt.start_learn_threshold = 1000;
+    opt.gamma = 0.7;
+    opt.learning_steps_total = 30000;
+    opt.learning_steps_burnin = 3000;
+    opt.epsilon_min = 0.05;
+    opt.epsilon_test_time = 0.05;
+    opt.layer_defs = layer_defs;
+    opt.tdtrainer_options = tdtrainer_options;
+    var brain;
+    return brain = new deepqlearn.Brain(num_inputs, num_actions, opt); // woohoo
+  }
+  if(brainType == B_DUMB){
+    return brain = new DumbBrain(num_actions);
+  }
 }
 
 function savenet() {
-  var j = MyAgent.brain.value_net.toJSON();
+  var j = agents[0].brain.value_net.toJSON();
   var t = JSON.stringify(j);
   document.getElementById('brainText').value = t;
   $('#loadTxt').empty();
@@ -342,18 +332,18 @@ function savenet() {
 function loadnet() {
   var t = document.getElementById('brainText').value;
   var j = JSON.parse(t);
-  MyAgent.brain.value_net.fromJSON(j);
+  agents[0].brain.value_net.fromJSON(j);
   stoplearn(); // also stop learning
   $('#loadTxt').empty();
   $('#loadTxt').append('Net Loaded');
 }
 
 function startlearn() {
-  MyAgent.brain.learning = true;
+  agents[0].brain.learning = true;
   cycleTraining = false;
 }
 function stoplearn() {
-  MyAgent.brain.learning = false;
+  agents[0].brain.learning = false;
   cycleTraining = false;
 }
 function runsim() {
@@ -374,12 +364,12 @@ function butAction(action)
 {
   if(!simRunning){
     // Do action
-    MyAgent.doAction(action);
+    agents[0].doAction(action);
     
     // Calculate sensor readings
-    MyAgent.sense();
+    agents[0].sense();
     // Calculate rewards
-    MyAgent.calcReward();
+    agents[0].calcReward();
   }
   console.log(action);
 }
@@ -467,11 +457,16 @@ function buildVisField(width,range,rot)
 function visFieldGen()
 {
   var visFieldArray = [];
-  visFieldArray.push(buildVisField(11,200,R_UP));
-  visFieldArray.push(buildVisField(11,200,R_RIGHT));
-  visFieldArray.push(buildVisField(11,200,R_DOWN));
-  visFieldArray.push(buildVisField(11,200,R_LEFT));
+  visFieldArray.push(buildVisField(11,200,R_UP).filter(isInRange));
+  visFieldArray.push(buildVisField(11,200,R_RIGHT).filter(isInRange));
+  visFieldArray.push(buildVisField(11,200,R_DOWN).filter(isInRange));
+  visFieldArray.push(buildVisField(11,200,R_LEFT).filter(isInRange));
   return visFieldArray;
+}
+
+function isInRange(v)
+{
+  return v[4] <= 200; 
 }
 
 
