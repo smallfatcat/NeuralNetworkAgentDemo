@@ -89,7 +89,7 @@ function buildWorld()
   }
   
   // Create food block
-  for(var i=0; i < 25; i++){
+  for(var i=0; i < 100; i++){
     var x = Math.floor(Math.random()*398)+ 51;
     var y = Math.floor(Math.random()*398)+ 51;
     for(var x2 = 0;x2<10;x2++){
@@ -103,7 +103,7 @@ function buildWorld()
   }
   
   // Create poison block
-  for(var i=0; i < 50; i++){
+  for(var i=0; i < 25; i++){
     var x = Math.floor(Math.random()*398)+ 51;
     var y = Math.floor(Math.random()*398)+ 51;
     for(var x2 = 0;x2<5;x2++){
@@ -309,6 +309,23 @@ function brainMaker(brainType)
   if(brainType == B_DUMB){
     return brain = new DumbBrain(num_actions);
   }
+}
+
+function savenetLS() {
+  var netData = JSON.stringify(agents[0].brain.value_net.toJSON());
+  console.log('Saved to LS: '+netData.length);
+  localStorage.setItem('netData',netData);
+  $('#loadTxt').empty();
+  $('#loadTxt').append('Current Net Saved To LS');
+}
+
+function loadnetLS() {
+  var netData = localStorage.getItem('netData');
+  console.log('Loaded from LS: '+netData.length);
+  agents[0].brain.value_net.fromJSON(JSON.parse(netData));
+  stoplearn(); // also stop learning
+  $('#loadTxt').empty();
+  $('#loadTxt').append('Net Loaded From LS');
 }
 
 function savenet() {

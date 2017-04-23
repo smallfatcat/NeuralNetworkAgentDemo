@@ -406,7 +406,7 @@ Agent.prototype = {
     this.justEaten = 0;
     
     var movementReward = 0;
-    if(this.lastAction == 0 || this.lastAction == 5 || this.lastAction == 6){
+    if(this.lastAction == 0){
       if(this.collided){
         movementReward =  0; 
       }
