@@ -250,78 +250,48 @@ function drawWorld()
         ctx.fillRect(wx, wy, 1, 1);
         worldMap.map[wx][wy] = 0;
       }
-      /*
-      // Draw visual field
-      if(worldMap.map[wx][wy] == 7){
-        ctx.fillStyle = 'rgb(0,0,255)';
-        ctx.fillRect(wx, wy, 1, 1);
-        worldMap.map[wx][wy] = 0;
-      }
       */
     }
   }
+
   
     
-  for(var i=1;i<3;i++){
-    var dAgent = agents[i];
+  for(var i=0;i<agents.length;i++){
+    var agent = agents[i];
+    var colorFill = '';
+    if(agent.brainType == B_SMART){
+      colorFill = 'rgb(255,64,64)';
+    }
+    else{
+      colorFill = 'rgb(64,255,64)';
+    }
     // Draw DumbAgent
     ctx.beginPath();
-    ctx.fillStyle = 'rgb(64,255,64)';
-    ctx.fillRect(dAgent.x-5.5, dAgent.y-5.5, 11, 11);
+    ctx.fillStyle = colorFill;
+    ctx.fillRect(agent.x-5.5, agent.y-5.5, 11, 11);
     
     var p = 10;
-    var cx = dAgent.x;
-    var cy = dAgent.y;
+    var cx = agent.x;
+    var cy = agent.y;
     ctx.beginPath();
-    if(dAgent.rot == 3){
+    if(agent.rot == 3){
       ctx.moveTo(cx, cy);
       ctx.lineTo(cx-p, cy);
     }
-    if(dAgent.rot == 1){
+    if(agent.rot == 1){
       ctx.moveTo(cx, cy);
       ctx.lineTo(cx+p, cy);
     }
-    if(dAgent.rot == 0){
+    if(agent.rot == 0){
       ctx.moveTo(cx, cy);
       ctx.lineTo(cx, cy-p);
     }
-    if(dAgent.rot == 2){
+    if(agent.rot == 2){
       ctx.moveTo(cx, cy);
       ctx.lineTo(cx, cy+p);
     }
     ctx.strokeStyle='rgb(0,0,0)';
     ctx.lineWidth=2;
     ctx.stroke();
-  }  
-    
-  // Draw MyAgent
-  ctx.beginPath();
-  ctx.fillStyle = 'rgb(255,64,64)';
-  ctx.fillRect(agents[0].x-5.5, agents[0].y-5.5, 11, 11);
-  
-  var p = 10;
-  var cx = agents[0].x;
-  var cy = agents[0].y;
-  ctx.beginPath();
-  var rot = agents[0].rot;
-  if(rot == 3){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx-p, cy);
   }
-  if(rot == 1){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx+p, cy);
-  }
-  if(rot == 0){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx, cy-p);
-  }
-  if(rot == 2){
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx, cy+p);
-  }
-  ctx.strokeStyle='rgb(0,0,0)';
-  ctx.lineWidth=2;
-  ctx.stroke();
-
 }
