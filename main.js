@@ -46,9 +46,9 @@ buildWorld();
 
 // Create Agents
 var agents = [];
-agents.push(new Agent(250,250,B_SMART));
-agents.push(new Agent(250,250,B_DUMB));
-agents.push(new Agent(250,250,B_DUMB));
+agents.push(new Agent(150,250,B_SMART));
+agents.push(new Agent(350,250,B_SMART));
+//agents.push(new Agent(250,250,B_DUMB));
 
 var routeTimer;
 
@@ -79,23 +79,21 @@ function buildWorld()
     worldMap.map[450][y] = 1;
   }
   // Inside walls
-  for (var i = 150; i < 351; i++){
-    worldMap.map[150][i]  = 1;
-    worldMap.map[i][150]  = 1;
-    worldMap.map[i][350]  = 1;
-  }
-  for(var i = 350; i < 450; i++){
+  for (var i = 50; i < 451; i++){
     worldMap.map[250][i]  = 1;
   }
+
   
   // Create food block
-  for(var i=0; i < 100; i++){
-    var x = Math.floor(Math.random()*398)+ 51;
-    var y = Math.floor(Math.random()*398)+ 51;
+  for(var i=0; i < 50; i++){
+    var x = Math.floor(Math.random()*180)+ 60;
+    var y = Math.floor(Math.random()*380)+ 60;
     for(var x2 = 0;x2<10;x2++){
       for(var y2 = 0;y2<10;y2++){
         if(worldMap.map[x+x2][y+y2] != 2 && worldMap.map[x+x2][y+y2] != 1){
           worldMap.map[x+x2][y+y2] = 2;
+          worldMap.foodTotal++;
+          worldMap.map[x+x2+200][y+y2] = 2;
           worldMap.foodTotal++;
         }
       }
@@ -104,12 +102,14 @@ function buildWorld()
   
   // Create poison block
   for(var i=0; i < 25; i++){
-    var x = Math.floor(Math.random()*398)+ 51;
-    var y = Math.floor(Math.random()*398)+ 51;
+    var x = Math.floor(Math.random()*180)+ 60;
+    var y = Math.floor(Math.random()*380)+ 60;
     for(var x2 = 0;x2<5;x2++){
       for(var y2 = 0;y2<5;y2++){
         if(worldMap.map[x+x2][y+y2] != 2 && worldMap.map[x+x2][y+y2] != 1){
           worldMap.map[x+x2][y+y2] = 8;
+          worldMap.foodTotal++;
+          worldMap.map[x+x2+200][y+y2] = 8;
           worldMap.foodTotal++;
         }
       }
@@ -312,17 +312,31 @@ function brainMaker(brainType)
 }
 
 function savenetLS() {
-  var netData = JSON.stringify(agents[0].brain.value_net.toJSON());
-  console.log('Saved to LS: '+netData.length);
-  localStorage.setItem('netData',netData);
+  var netData1 = JSON.stringify(agents[0].brain.value_net.toJSON());
+  var netData2 = JSON.stringify(agents[1].brain.value_net.toJSON());
+  var netData1History = JSON.stringify({size: netData1.length, generation: agents[0].brainGen});
+  var netData2History = JSON.stringify({size: netData2.length, generation: agents[1].brainGen});
+  console.log('Agent 1 saved to LS: '+netData1.length);
+  console.log('Agent 2 saved to LS: '+netData2.length);
+  localStorage.setItem('netData1',netData1);
+  localStorage.setItem('netData1History',netData1History);
+  localStorage.setItem('netData2History',netData2History);
+  localStorage.setItem('netData2',netData2);
   $('#loadTxt').empty();
   $('#loadTxt').append('Current Net Saved To LS');
 }
 
 function loadnetLS() {
-  var netData = localStorage.getItem('netData');
-  console.log('Loaded from LS: '+netData.length);
-  agents[0].brain.value_net.fromJSON(JSON.parse(netData));
+  var netData1 = localStorage.getItem('netData1');
+  var netData2 = localStorage.getItem('netData2');
+  var netData1History = JSON.parse(localStorage.getItem('netData1History'));
+  var netData2History = JSON.parse(localStorage.getItem('netData2History'));
+  console.log('Agent 1 loaded from LS: '+netData1.length);
+  console.log('Agent 2 loaded from LS: '+netData2.length);
+  agents[0].brain.value_net.fromJSON(JSON.parse(netData1));
+  agents[1].brain.value_net.fromJSON(JSON.parse(netData2));
+  agents[0].brainGen = netData1History.generation+1;
+  agents[1].brainGen = netData2History.generation+1;
   stoplearn(); // also stop learning
   $('#loadTxt').empty();
   $('#loadTxt').append('Net Loaded From LS');
@@ -346,12 +360,17 @@ function loadnet() {
 }
 
 function startlearn() {
-  agents[0].brain.learning = true;
-  cycleTraining = false;
+  for(var agent of agents){
+    agent.brain.learning = true;
+    cycleTraining = false;
+  }
+  
 }
 function stoplearn() {
-  agents[0].brain.learning = false;
-  cycleTraining = false;
+  for(var agent of agents){
+    agent.brain.learning = false;
+    cycleTraining = false;
+  }
 }
 function runsim() {
   simRunning = true;

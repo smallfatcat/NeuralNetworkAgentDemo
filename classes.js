@@ -135,11 +135,12 @@ var Agent = function(x,y,brainType)
   this.tastePoison = 0;
   
   this.collided = false;
-  this.brainType = brainType;
-  
+    
   this.sensors = [];
   this.mouths = [];
   this.rewardArray = [];
+  this.brainType = brainType;
+  this.brainGen = 0;
   this.brain = brainMaker(brainType);
   
   // Add sensors

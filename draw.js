@@ -40,23 +40,23 @@ function updateAgentReadout()
   var data = [];
   data.push([ 'Frame Time',               frameTime     ]);
   data.push([ 'FPS',               (1000/frameTime).toFixed(1)     ]);
+  data.push([ 'Runs',                 runs ]);
+  data.push([ 'Food',                 worldMap.foodTotal ]);
+  data.push([ 'Sim running',          simRunning ]);
   for(var rc of agents[0].rewardArray){
     data.push([ rc[0], rc[1].toFixed(3) ]);
   }
   data.push([ 'Reward',               agents[0].reward.toFixed(3)     ]);
-  data.push([ '', 'AI Agent', 'DumbAgent1', 'DumbAgent2']);
-  data.push([ 'Food',              agents[0].food.toFixed(3) , agents[1].food.toFixed(3), agents[2].food.toFixed(3) ]);
-  data.push([ 'Poison',              agents[0].poison.toFixed(3) , agents[1].poison.toFixed(3), agents[2].poison.toFixed(3) ]);
-  data.push([ 'Travelled',         agents[0].travelled, agents[1].travelled, agents[2].travelled ]);
-  data.push([ 'Runs',                 runs ]);
-  data.push([ 'Food',                 worldMap.foodTotal ]);
-  data.push([ 'Sim running',          simRunning ]);
-  data.push([ 'Learning',             agents[0].brain.learning ]);
-  data.push([ 'experience replay size', agents[0].brain.experience.length ]);
-  data.push([ 'exploration epsilon',    agents[0].brain.epsilon.toFixed(3) ]);
-  data.push([ 'age',                     agents[0].brain.age ]);
-  data.push([ 'average Q-learning loss', agents[0].brain.average_loss_window.get_average().toFixed(3) ]);
-  data.push([ 'smooth-ish reward',       agents[0].brain.average_reward_window.get_average().toFixed(3) ]);
+  data.push([ '', 'Agent 1', 'Agent 2']);
+  data.push([ 'Food',              agents[0].food.toFixed(3) , agents[1].food.toFixed(3) ]);
+  data.push([ 'Poison',              agents[0].poison.toFixed(3) , agents[1].poison.toFixed(3) ]);
+  data.push([ 'Travelled',         agents[0].travelled, agents[1].travelled]);
+  data.push([ 'Learning',             agents[0].brain.learning, agents[1].brain.learning ]);
+  data.push([ 'experience replay size', agents[0].brain.experience.length, agents[1].brain.experience.length ]);
+  data.push([ 'exploration epsilon',    agents[0].brain.epsilon.toFixed(3), agents[1].brain.epsilon.toFixed(3) ]);
+  data.push([ 'age',                     agents[0].brain.age, agents[0].brain.age ]);
+  data.push([ 'average Q-learning loss', agents[0].brain.average_loss_window.get_average().toFixed(3), agents[1].brain.average_loss_window.get_average().toFixed(3) ]);
+  data.push([ 'smooth-ish reward',       agents[0].brain.average_reward_window.get_average().toFixed(3),agents[1].brain.average_reward_window.get_average().toFixed(3) ]);
   var agentTxt = simpleTable(data);
   //$('#agentDiv').append(agentTxt);
   document.getElementById('agentDiv').innerHTML  = agentTxt;
@@ -89,43 +89,49 @@ function drawNeurons()
   //net.layers[1].out_act.w[0]
   var x = 70;
   var y = 20;
-  for(let l of agents[0].brain.value_net.layers){
-    x =  70;
-    y += 10;
-    ctx.font = "8px Arial";
+  for(var i=0; i < agents.length; i++){
     ctx.fillStyle='rgb(255,255,255)';
-    ctx.fillText(l.layer_type.toUpperCase() + ' ('+l.out_depth+ ')',10,y+3);
-    // draw each neuron
-    if(l.out_act !=undefined){
-      
-      var k = 0;
-      for(let w of l.out_act.w){
-        //console.log(w);
-        k++;
-        x += 10;
-        if (k>50){x = 80;y+=10; k = 1};
-        ctx.beginPath();
-        ctx.arc(x,y,5,0,2*Math.PI);
-        var c = parseInt((w+1)/2*255);
-        ctx.fillStyle='rgb('+c+','+c+','+c+')';
-        ctx.fill();
+    ctx.fillText('GEN: '+agents[i].brainGen,80,y+3);
+    //y+=10;
+    for(let l of agents[i].brain.value_net.layers){
+      x =  70;
+      y += 10;
+      ctx.font = "8px Arial";
+      ctx.fillStyle='rgb(255,255,255)';
+      ctx.fillText(l.layer_type.toUpperCase() + ' ('+l.out_depth+ ')',10,y+3);
+      // draw each neuron
+      if(l.out_act !=undefined){
+        
+        var k = 0;
+        for(let w of l.out_act.w){
+          //console.log(w);
+          k++;
+          x += 10;
+          if (k>50){x = 80;y+=10; k = 1};
+          ctx.beginPath();
+          ctx.arc(x,y,5,0,2*Math.PI);
+          var c = parseInt((w+1)/2*255);
+          ctx.fillStyle='rgb('+c+','+c+','+c+')';
+          ctx.fill();
+        }
+      }
+      // draw each neuron if the net is not yet complete
+      else{
+        var k = 0;
+        for(var w =0;w<l.out_depth;w++){
+          //console.log(w);
+          k++;
+          x += 10;
+          if (k>50){x = 80;y+=10; k = 1};
+          ctx.beginPath();
+          ctx.arc(x,y,5,0,2*Math.PI);
+          //var c = parseInt((w+1)/2*255);
+          ctx.fillStyle='rgb(128,128,128)';
+          ctx.fill();
+        }
       }
     }
-    // draw each neuron if the net is not yet complete
-    else{
-      var k = 0;
-      for(var w =0;w<l.out_depth;w++){
-        //console.log(w);
-        k++;
-        x += 10;
-        if (k>50){x = 80;y+=10; k = 1};
-        ctx.beginPath();
-        ctx.arc(x,y,5,0,2*Math.PI);
-        //var c = parseInt((w+1)/2*255);
-        ctx.fillStyle='rgb(128,128,128)';
-        ctx.fill();
-      }
-    }
+    y += 20;
   }
   
   // Draw Visual Cortex
@@ -255,7 +261,7 @@ function drawWorld()
   }
 
   
-    
+  // Draw each agent 
   for(var i=0;i<agents.length;i++){
     var agent = agents[i];
     var colorFill = '';
@@ -265,11 +271,12 @@ function drawWorld()
     else{
       colorFill = 'rgb(64,255,64)';
     }
-    // Draw DumbAgent
+    // Draw agent box
     ctx.beginPath();
     ctx.fillStyle = colorFill;
     ctx.fillRect(agent.x-5.5, agent.y-5.5, 11, 11);
     
+    // Draw pointer line based on agent rotation
     var p = 10;
     var cx = agent.x;
     var cy = agent.y;
