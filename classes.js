@@ -145,7 +145,7 @@ var Agent = function(x,y,brainType)
   
   // Add sensors
   var sensitivities = [2,1,8];
-  this.sensors.push(new SensorEye(0,-5,R_UP,200,sensitivities));
+  this.sensors.push(new SensorEye(0,-5,R_UP,100,sensitivities));
     
   // Add mouths
   var mouthOffset = getLineCoords(-5,-6,5,-6);

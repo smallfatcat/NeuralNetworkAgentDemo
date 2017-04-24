@@ -32,6 +32,8 @@ var testdata = [];
 var label = [];
 var runs = 0;
 var cycleTraining = false;
+var autoTraining = false;
+var slowDraw = false;
 var lastError = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
 label.push(6);
 //var net = new convnetjs.Net();
@@ -65,6 +67,40 @@ function start() {
   drawAll();
   loopTimer = setInterval(checkSimRunning, 10);
   
+}
+
+function resetWorld()
+{
+  worldMap = new World();
+  buildWorld();
+  agents[0].x = 150;
+  agents[0].y = 250;
+  agents[1].x = 350;
+  agents[1].y = 250;
+}
+
+function resetAgents(){
+  var netData1 = JSON.stringify(agents[0].brain.value_net.toJSON());
+  var netData2 = JSON.stringify(agents[1].brain.value_net.toJSON());
+  var gen1 = agents[0].brainGen;
+  var gen2 = agents[1].brainGen;
+  agents = [];
+  agents.push(new Agent(150,250,B_SMART));
+  agents.push(new Agent(350,250,B_SMART));
+  agents[0].brain.value_net.fromJSON(JSON.parse(netData1));
+  agents[1].brain.value_net.fromJSON(JSON.parse(netData2));
+  agents[0].brainGen = gen1;
+  agents[1].brainGen = gen1;
+  stoplearn(); // also stop learning
+}
+
+function autoTrain(){
+  savenetLS();
+  resetWorld();
+  resetAgents();
+  loadnetLS();
+  startlearn();
+  runs = 0;
 }
 
 function buildWorld()
@@ -201,6 +237,11 @@ function checkSimRunning()
             agent.brain.learning = true;
           }
         }
+      }
+    }
+    if(autoTraining){
+      if(runs%31000 == 0 && runs != 0){
+        autoTrain();
       }
     }
     tickCompleted = false;
@@ -378,6 +419,7 @@ function runsim() {
 function pausesim() {
   simRunning = false;
 }
+
 function cycletrain() {
   if(cycleTraining){
     cycleTraining = false;
@@ -386,6 +428,25 @@ function cycletrain() {
     cycleTraining = true;
   }
 }
+
+function autoButton(){
+  if(autoTraining){
+    autoTraining = false;
+  }
+  else{
+    autoTraining = true;
+  }
+}
+
+function slowButton(){
+  if(slowDraw){
+    slowDraw = false;
+  }
+  else{
+    slowDraw = true;
+  }
+}
+
 function butAction(action)
 {
   if(!simRunning){
@@ -483,16 +544,16 @@ function buildVisField(width,range,rot)
 function visFieldGen()
 {
   var visFieldArray = [];
-  visFieldArray.push(buildVisField(11,200,R_UP).filter(isInRange));
-  visFieldArray.push(buildVisField(11,200,R_RIGHT).filter(isInRange));
-  visFieldArray.push(buildVisField(11,200,R_DOWN).filter(isInRange));
-  visFieldArray.push(buildVisField(11,200,R_LEFT).filter(isInRange));
+  visFieldArray.push(buildVisField(11,100,R_UP).filter(isInRange));
+  visFieldArray.push(buildVisField(11,100,R_RIGHT).filter(isInRange));
+  visFieldArray.push(buildVisField(11,100,R_DOWN).filter(isInRange));
+  visFieldArray.push(buildVisField(11,100,R_LEFT).filter(isInRange));
   return visFieldArray;
 }
 
 function isInRange(v)
 {
-  return v[4] <= 200; 
+  return v[4] <= 100; 
 }
 
 

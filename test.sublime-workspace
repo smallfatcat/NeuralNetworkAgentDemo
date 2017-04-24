@@ -3,6 +3,10 @@
 	{
 		"selected_items":
 		[
+			[
+				"ge",
+				"generation"
+			]
 		]
 	},
 	"buffers":
@@ -11,7 +15,8 @@
 			"file": "draw.js",
 			"settings":
 			{
-				"buffer_size": 8503,
+				"buffer_size": 8316,
+				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
@@ -24,18 +29,20 @@
 			}
 		},
 		{
-			"file": "classes.js",
+			"file": "main.js",
 			"settings":
 			{
-				"buffer_size": 10797,
+				"buffer_size": 13361,
+				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		},
 		{
-			"file": "main.js",
+			"file": "classes.js",
 			"settings":
 			{
-				"buffer_size": 12335,
+				"buffer_size": 10820,
+				"encoding": "UTF-8",
 				"line_ending": "Windows"
 			}
 		}
@@ -47,16 +54,20 @@
 	"build_varint": "",
 	"command_palette":
 	{
-		"height": 0.0,
+		"height": 392.0,
 		"last_filter": "",
 		"selected_items":
 		[
+			[
+				"",
+				"Package Control: List Packages"
+			]
 		],
-		"width": 0.0
+		"width": 416.0
 	},
 	"console":
 	{
-		"height": 0.0,
+		"height": 126.0,
 		"history":
 		[
 		]
@@ -76,7 +87,9 @@
 	],
 	"file_history":
 	[
-		"/C/Users/David/Desktop/nettestv1/main.js"
+		"/C/Users/David/Desktop/nettestv1/main.js",
+		"/C/Users/David/Desktop/nettestv1/LICENSE",
+		"/C/Users/David/Desktop/nettestv1/classes.js"
 	],
 	"find":
 	{
@@ -94,6 +107,10 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"stoplearn",
+			"routeTimer",
+			"loopTimer",
+			"agents[",
 			"agents[0]"
 		],
 		"highlight": true,
@@ -121,15 +138,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 8503,
+						"buffer_size": 8316,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								3068,
+								3068
 							]
 						],
 						"settings":
@@ -139,10 +156,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1320.0,
+						"translation.y": 1230.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 1,
 					"type": "text"
 				},
 				{
@@ -175,49 +192,19 @@
 				},
 				{
 					"buffer": 2,
-					"file": "classes.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 10797,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
-							"tab_size": 2,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
 					"file": "main.js",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 12335,
+						"buffer_size": 13361,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								8634,
+								8634
 							]
 						],
 						"settings":
@@ -227,11 +214,41 @@
 							"tab_size": 2,
 							"translate_tabs_to_spaces": true
 						},
-						"translation.x": -0.0,
-						"translation.y": 6492.0,
+						"translation.x": 0.0,
+						"translation.y": 4615.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "classes.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 10820,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3173,
+								3173
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.sublime-syntax",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1940.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
 					"type": "text"
 				}
 			]
@@ -272,6 +289,10 @@
 	{
 		"height": 0.0
 	},
+	"output.unsaved_changes":
+	{
+		"height": 100.0
+	},
 	"pinned_build_system": "",
 	"project": "test.sublime-project",
 	"replace":
@@ -309,11 +330,20 @@
 	"selected_group": 0,
 	"settings":
 	{
+		"last_automatic_layout":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		]
 	},
 	"show_minimap": true,
 	"show_open_files": false,
 	"show_tabs": true,
-	"side_bar_visible": true,
+	"side_bar_visible": false,
 	"side_bar_width": 150.0,
 	"status_bar_visible": true,
 	"template_settings":

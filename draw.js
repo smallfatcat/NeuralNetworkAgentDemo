@@ -1,9 +1,20 @@
 function drawAll() {
-  drawNeurons();
-  drawWorld();
-  // Update Agent readout
-  updateStatus();
-  updateAgentReadout(); 
+  if(!slowDraw){
+    drawNeurons();
+    drawWorld();
+    // Update Agent readout
+    updateStatus();
+    updateAgentReadout();
+  }
+  else{
+    if(runs%100 == 0){
+      drawNeurons();
+      drawWorld();
+      // Update Agent readout
+      updateStatus();
+      updateAgentReadout();
+    }
+  }
 }
 
 function updateStatus(){
@@ -21,10 +32,22 @@ function updateStatus(){
     statusTxt += 'Training Disabled - ';
   }
   if(cycleTraining){
-    statusTxt += 'Cycle Training On';
+    statusTxt += 'Cycle Training On - ';
   }
   else{
-    statusTxt += 'Cycle Training Off';
+    statusTxt += 'Cycle Training Off - ';
+  }
+  if(autoTraining){
+    statusTxt += 'Auto Training On - ';
+  }
+  else{
+    statusTxt += 'Auto Training Off - ';
+  }
+  if(slowDraw){
+    statusTxt += 'Slow Draw On';
+  }
+  else{
+    statusTxt += 'Slow Draw Off';
   }
   
   //$('#statusTxt').empty();
