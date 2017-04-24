@@ -117,7 +117,7 @@ var Mouth = function(x,y)
 }
 
 // Agent class
-var Agent = function(x,y,brainType)
+var Agent = function(x,y,brainType,netType)
 {
   // Init properties
   this.x = x;
@@ -140,8 +140,9 @@ var Agent = function(x,y,brainType)
   this.mouths = [];
   this.rewardArray = [];
   this.brainType = brainType;
+  this.netType = netType;
   this.brainGen = 0;
-  this.brain = brainMaker(brainType);
+  this.brain = brainMaker(brainType, netType);
   
   // Add sensors
   var sensitivities = [2,1,8];

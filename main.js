@@ -48,8 +48,8 @@ buildWorld();
 
 // Create Agents
 var agents = [];
-agents.push(new Agent(150,250,B_SMART));
-agents.push(new Agent(350,250,B_SMART));
+agents.push(new Agent(150,250,B_SMART,0));
+agents.push(new Agent(350,250,B_SMART,1));
 //agents.push(new Agent(250,250,B_DUMB));
 
 var routeTimer;
@@ -85,8 +85,8 @@ function resetAgents(){
   var gen1 = agents[0].brainGen;
   var gen2 = agents[1].brainGen;
   agents = [];
-  agents.push(new Agent(150,250,B_SMART));
-  agents.push(new Agent(350,250,B_SMART));
+  agents.push(new Agent(150,250,B_SMART,0));
+  agents.push(new Agent(350,250,B_SMART,1));
   agents[0].brain.value_net.fromJSON(JSON.parse(netData1));
   agents[1].brain.value_net.fromJSON(JSON.parse(netData2));
   agents[0].brainGen = gen1;
@@ -309,7 +309,7 @@ function clockTick()
 
 // Adapted from deepqlearn demo by @karpathy from 
 // http://cs.stanford.edu/people/karpathy/convnetjs/
-function brainMaker(brainType)
+function brainMaker(brainType, netType)
 {
   var num_inputs = 39; // 3 eyes, each sees 11 pixels color (wall, food proximity), 4 rotation, 2 taste
   var num_actions = 6; // 3 possible actions agent can do
@@ -324,9 +324,14 @@ function brainMaker(brainType)
     // to just insert simple relu hidden layers.
     var layer_defs = [];
     layer_defs.push({type:'input', out_sx:1, out_sy:1, out_depth:network_size});
-    layer_defs.push({type:'fc', num_neurons: 100, activation:'relu'});
-    layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
-        
+    if(netType == 0){
+      layer_defs.push({type:'fc', num_neurons: 100, activation:'relu'});
+      layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+    }   
+    if(netType == 1){
+      layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+      layer_defs.push({type:'fc', num_neurons: 50, activation:'relu'});
+    }  
     layer_defs.push({type:'regression', num_neurons:num_actions});
 
     // options for the Temporal Difference learner that trains the above net
