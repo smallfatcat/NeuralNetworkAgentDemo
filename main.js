@@ -230,7 +230,7 @@ function checkSimRunning()
     if(cycleTraining){
       if(runs%100 == 0){
         for(var agent of agents){
-          if(MyAgent.brain.learning){
+          if(agent.brain.learning){
             agent.brain.learning = false;
           }
           else{

@@ -66,11 +66,11 @@ function updateAgentReadout()
   data.push([ 'Runs',                 runs ]);
   data.push([ 'Food',                 worldMap.foodTotal ]);
   data.push([ 'Sim running',          simRunning ]);
-  for(var rc of agents[0].rewardArray){
-    data.push([ rc[0], rc[1].toFixed(3) ]);
-  }
-  data.push([ 'Reward',               agents[0].reward.toFixed(3)     ]);
   data.push([ '', 'Agent 1', 'Agent 2']);
+  for(var i=0;i < agents[0].rewardArray.length;i++){
+    data.push([ agents[0].rewardArray[i][0], agents[0].rewardArray[i][1].toFixed(3),  agents[1].rewardArray[i][1].toFixed(3)]);
+  }
+  data.push([ 'Reward',               agents[0].reward.toFixed(3), agents[1].reward.toFixed(3)     ]);
   data.push([ 'Food',              agents[0].food.toFixed(3) , agents[1].food.toFixed(3) ]);
   data.push([ 'Poison',              agents[0].poison.toFixed(3) , agents[1].poison.toFixed(3) ]);
   data.push([ 'Travelled',         agents[0].travelled, agents[1].travelled]);
@@ -159,62 +159,74 @@ function drawNeurons()
   
   // Draw Visual Cortex
   var outputArray = [];
+  outputArray.push([]);
+  outputArray.push([]);
   var px = 70;
   var py = 400;
   ctx.fillStyle='rgb(255,255,255)';
   ctx.fillText('VISUAL FIELD',10,py-20);
-  var sensIdx = 0;
-  var sType = ['FOOD','WALL','POISON'];
-  for(var outputs of agents[0].sensors[0].outputs){
-    ctx.fillStyle='rgb(255,255,255)';
-    ctx.fillText(sType[sensIdx],10,py+9);
-    outputArray.push(outputs);
-    var i=0;
-    for(var p of outputs){
-      var c = parseInt(p*255);
-      var sensitivity = agents[0].sensors[0].sensitivities[sensIdx];
-      if(sensitivity == 2){
-        ctx.fillStyle = 'rgb(0,'+c+',0)';
+  for(var aIdx = 0; aIdx<agents.length; aIdx++){
+    var sensIdx = 0;
+    var sType = ['FOOD','WALL','POISON'];
+    for(var outputs of agents[aIdx].sensors[0].outputs){
+      ctx.fillStyle='rgb(255,255,255)';
+      ctx.fillText(sType[sensIdx],10,py+9);
+      outputArray[aIdx].push(outputs);
+      var i=0;
+      for(var p of outputs){
+        var c = parseInt(p*255);
+        var sensitivity = agents[aIdx].sensors[0].sensitivities[sensIdx];
+        if(sensitivity == 2){
+          ctx.fillStyle = 'rgb(0,'+c+',0)';
+        }
+        if(sensitivity == 1){
+          ctx.fillStyle='rgb('+c+',0,0)';
+        }
+        if(sensitivity == 8){
+          ctx.fillStyle='rgb('+c+','+c+',0)';
+        }
+        ctx.fillRect(px, py, 10, 10);
+        px += 10;
+        i++;
       }
-      if(sensitivity == 1){
-        ctx.fillStyle='rgb('+c+',0,0)';
+      py += 10;
+      px = 70+(130*aIdx);
+      sensIdx ++;
+    }
+    px = 200;
+    py = 400;
+  }
+  // Composite Cortex
+  px = 70;
+  py += 40;
+  ctx.fillStyle='rgb(255,255,255)';
+  ctx.fillText('COMPOSITE',10,py+9);
+  for(var aIdx = 0; aIdx<agents.length; aIdx++){
+    for(var p=0;p<outputArray[aIdx][0].length;p++){
+      var food   = outputArray[aIdx][0][p];
+      var wall   = outputArray[aIdx][1][p];
+      var poison = outputArray[aIdx][2][p];
+          
+      if( food > wall || poison > wall ){
+        if(poison > food){
+          var c = parseInt(poison*255);
+          ctx.fillStyle = 'rgb('+c+','+c+',0)';
+        }
+        else{
+          var c = parseInt(food*255);
+          ctx.fillStyle = 'rgb(0,'+c+',0)';
+        }
       }
-      if(sensitivity == 8){
-        ctx.fillStyle='rgb('+c+','+c+',0)';
+      else {
+        var c = parseInt(wall*255);
+        ctx.fillStyle = 'rgb('+c+',0,0)';
       }
       ctx.fillRect(px, py, 10, 10);
       px += 10;
-      i++;
     }
-    py += 10;
-    px = 70;
-    sensIdx ++;
-  }
-  // Composite Cortex
-  py += 10;
-  ctx.fillStyle='rgb(255,255,255)';
-  ctx.fillText('COMPOSITE',10,py+9);
-  for(var p=0;p<outputArray[0].length;p++){
-    var food   = outputArray[0][p];
-    var wall   = outputArray[1][p];
-    var poison = outputArray[2][p];
-        
-    if( food > wall || poison > wall ){
-      if(poison > food){
-        var c = parseInt(poison*255);
-        ctx.fillStyle = 'rgb('+c+','+c+',0)';
-      }
-      else{
-        var c = parseInt(food*255);
-        ctx.fillStyle = 'rgb(0,'+c+',0)';
-      }
-    }
-    else {
-      var c = parseInt(wall*255);
-      ctx.fillStyle = 'rgb('+c+',0,0)';
-    }
-    ctx.fillRect(px, py, 10, 10);
-    px += 10;
+    px = 200;
+    py = 400;
+    py += 40;
   }
   
   // Draw taste outputs

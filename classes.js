@@ -420,6 +420,11 @@ Agent.prototype = {
     if(this.lastAction == 7 ){
       eatAttemptReward = 1;
     }
+
+    var collisionReward = 0;
+    if(this.collided){
+      collisionReward = 1;
+    }
     
     // Tweak rewards
     foodProximityReward = foodProximityReward/4;
@@ -428,6 +433,7 @@ Agent.prototype = {
     eatenReward = eatenReward/2;
     movementReward = movementReward/4;
     eatAttemptReward = eatAttemptReward/2;
+    collisionReward = collisionReward/2;
     
     // Store reward contributors
     this.rewardArray = [];
@@ -437,8 +443,9 @@ Agent.prototype = {
     this.rewardArray.push(['eatenReward',eatenReward]);
     this.rewardArray.push(['movementReward',movementReward]);
     this.rewardArray.push(['eatAttemptReward',eatAttemptReward]);
+    this.rewardArray.push(['collisionReward',collisionReward]);
     
-    this.reward = foodProximityReward + foodReward + eatenReward + movementReward - wallProximityReward - eatAttemptReward;
-    this.reward = Math.max(this.reward,0);
+    this.reward = foodProximityReward + foodReward + eatenReward + movementReward - wallProximityReward - eatAttemptReward - collisionReward;
+    //this.reward = Math.max(this.reward,0);
   }
 }
